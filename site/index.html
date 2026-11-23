@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0f0e">
+<title>Navi – Bahn, Bus und Tram, live</title>
+<meta name="description" content="Navi zeigt jede Abfahrt in Deutschland live: Bahn, Bus und Tram, Verbindungen, Aufzüge am Bahnhof. Frei, ohne Werbung, ohne Tracking.">
+<meta property="og:title" content="Navi – Bahn, Bus und Tram, live">
+<meta property="og:description" content="Jede Abfahrt in Deutschland live. Frei, ohne Werbung, ohne Tracking.">
+<meta property="og:image" content="og.png">
+<script>try{if(localStorage.getItem("theme")==="light")document.documentElement.dataset.theme="light"}catch(e){}</script>
+<link rel="icon" href="favicon.png">
+<link rel="preload" href="fonts/dinish.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="stop">
+  <div class="disc"><img src="logo.png" alt="Navi" width="70" height="70"></div>
+
+  <div class="topbar">
+    <a class="chip-btn" href="https://github.com/taynotfound/navi" rel="noopener">GitHub</a>
+    <button class="chip-btn theme-btn" id="theme" type="button" aria-label="Helles Design"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg></button>
+    <button class="chip-btn" id="lang" type="button">EN</button>
+  </div>
+
+  <section class="mounted" aria-labelledby="name">
+    <div class="plate">
+      <h1 id="name">Navi</h1>
+      <ul class="served" aria-label="Verkehrsmittel" data-i-aria="served">
+        <li class="m-long">ICE · IC</li><li class="m-reg">RE · RB</li><li class="m-s">S</li>
+        <li class="m-u">U</li><li class="m-tram">Tram</li><li class="m-bus">Bus</li>
+      </ul>
+      <p class="say" data-i="say">Jede Abfahrt in Deutschland, live. Ohne Werbung, ohne Konto, ohne Tracking.</p>
+    </div>
+
+    <div class="case">
+      <div class="case-in">
+        <div class="case-head">
+          <h2><span data-i="dep">Abfahrt</span> <b id="stopname">Göttingen</b></h2>
+          <span class="live" id="live" hidden><i></i><span data-i="live">live</span></span>
+          <span class="clock" id="clock" aria-hidden="true"></span>
+        </div>
+        <div class="stops" role="group" aria-label="Haltestelle wählen" data-i-aria="pick">
+          <button type="button" data-stop="de-DELFI_de:03152:33817" aria-pressed="true">Göttingen</button>
+          <button type="button" data-stop="de-DELFI_de:06412:10" aria-pressed="false">Frankfurt Hbf</button>
+          <button type="button" data-stop="de-DELFI_de:08326:6592" aria-pressed="false">Villingen</button>
+          <button type="button" data-stop="de-DELFI_de:11000:900003201" aria-pressed="false">Berlin Hbf</button>
+        </div>
+        <ol class="board" id="board" aria-live="polite"></ol>
+        <p class="board-note" id="note"></p>
+        <div class="get">
+          <a class="btn btn-main" href="https://github.com/taynotfound/navi/releases/latest" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 20h16"/></svg>
+            <span data-i="apk">App laden (APK)</span>
+          </a>
+          <a class="btn btn-alt" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/taynotfound/navi" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7 12 3 4 7v10l8 4 8-4V7Z"/><path d="m4 7 8 4 8-4M12 11v10"/></svg>
+            <span data-i="obt">Mit Obtainium</span>
+          </a>
+          <span class="soon" data-i="soon">F-Droid folgt bald.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sign mounted" aria-labelledby="trip">
+    <h2 id="trip" data-i="tripH">Sag mir einfach, was ich tun soll.</h2>
+    <p data-i="tripP">Unterwegs zeigt Navi nur den nächsten Schritt – live, mit Gleis und Restzeit. Und wer auf dich wartet, verfolgt deine Fahrt über einen Link im Browser mit.</p>
+    <div class="band">
+      <ol aria-label="Beispielfahrt Göttingen – Villingen" data-i-aria="bandLabel">
+        <li class="done"><b>Göttingen</b>06:27</li>
+        <li class="done"><b>Kassel-W.</b>06:46</li>
+        <li class="done"><b>Fulda</b>07:58</li>
+        <li class="here change"><b>Frankfurt Hbf</b><span data-i="change">Umstieg</span></li>
+        <li><b>Mannheim</b>09:52</li>
+        <li><b>Offenburg</b>10:29</li>
+        <li><b>Villingen</b>11:03</li>
+      </ol>
+      <p class="now"><span data-i="now">Umstieg in Frankfurt Hbf · Gleis 7 → 9</span><small data-i="nowS">ICE 277 Richtung Chur · noch 8 Min.</small></p>
+      <p class="example" data-i="example">Beispiel. In der App und im geteilten Link läuft das mit echten Live-Daten.</p>
+    </div>
+  </section>
+
+  <section class="sign mounted" aria-labelledby="lifts">
+    <h2 id="lifts" data-i="liftH">Geht der Aufzug? Das weißt du vorher.</h2>
+    <p data-i="liftP">Navi plant auf Wunsch stufenfrei und zeigt jeden Aufzug und jede Rolltreppe am Bahnhof mit Live-Status – hier für <b id="liftstop">Göttingen</b>.</p>
+    <ul class="lifts" id="liftlist"></ul>
+    <p class="example" id="liftnote"></p>
+  </section>
+
+  <section class="sign mounted" aria-labelledby="rules">
+    <h2 id="rules" data-i="rulesH">Die Hausordnung.</h2>
+    <p data-i="rulesP">Navi ist ein Ein-Personen-Projekt, quelloffen unter AGPL-3.0. Deine Suchen bleiben deine Sache.</p>
+    <ul class="rules">
+      <li data-i="r1">Keine Werbung</li><li data-i="r2">Kein Konto</li><li data-i="r3">Kein Tracking</li><li>AGPL-3.0</li>
+    </ul>
+  </section>
+
+  <section class="support" aria-labelledby="kofi">
+    <div>
+      <h2 id="kofi" data-i="kofiH">Gefällt dir Navi?</h2>
+      <p data-i="kofiP">Navi bleibt kostenlos. Ein Kaffee bezahlt den Server und die nächste Funktion.</p>
+    </div>
+    <a class="btn" href="https://ko-fi.com/taygotkofi" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z"/><path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17M7 3v2m4-2v2"/></svg>
+      <span data-i="kofiB">Auf Ko-fi unterstützen</span>
+    </a>
+  </section>
+
+  <footer class="base">
+    <span data-i="data">Daten: Deutsche Bahn (OpenBoards, OpenStation, FaSta), Transitous / MOTIS, Karte © OpenStreetMap.</span>
+    <span data-i="notdb">Kein Angebot der Deutschen Bahn.</span>
+    <a href="https://github.com/taynotfound/navi/blob/main/AI-DECLARATION.md" data-i="ai">KI-Erklärung</a>
+  </footer>
+</main>
+
+<script>
+// local previews talk to a dev server; the published site always uses the real API
+const API = /^(localhost|127\.0\.0\.1|10\.0\.2\.2)$/.test(location.hostname) ? `http://${location.hostname}:8090` : "https://navi-api.taymaerz.de";
+const EN = {
+  served: "Transport modes", say: "Every departure in Germany, live. No ads, no account, no tracking.",
+  dep: "Departures", live: "live", pick: "Choose a stop",
+  apk: "Get the app (APK)", obt: "With Obtainium", soon: "F-Droid coming soon.",
+  tripH: "Just tell me what to do.", tripP: "On the move, Navi shows only the next step – live, with platform and time left. And whoever is waiting for you follows your trip through a link in their browser.",
+  bandLabel: "Example trip Göttingen – Villingen", change: "Change",
+  now: "Change at Frankfurt Hbf · platform 7 → 9", nowS: "ICE 277 towards Chur · 8 min left",
+  example: "Example. In the app and in shared links this runs on real live data.",
+  liftH: "Is the lift working? You'll know before you get there.", liftP: "Navi plans step-free routes if you want and shows every lift and escalator at the station with live status – here for <b id=\"liftstop\"></b>.",
+  rulesH: "House rules.", rulesP: "Navi is a one-person project, open source under AGPL-3.0. What you search for is your business.",
+  r1: "No ads", r2: "No account", r3: "No tracking",
+  kofiH: "Like Navi?", kofiP: "Navi stays free. A coffee pays for the server and the next feature.", kofiB: "Support on Ko-fi",
+  data: "Data: Deutsche Bahn (OpenBoards, OpenStation, FaSta), Transitous / MOTIS, map © OpenStreetMap.",
+  notdb: "Not affiliated with Deutsche Bahn.", ai: "AI declaration",
+  onTime: "on time", cancelled: "cancelled", empty: "Nothing departs here in the next 90 minutes.",
+  offline: "Live data unavailable right now – the server may be restarting.", updated: "Updated",
+  liftsLive: "Live status from DB FaSta.", liftsNone: "No lift data for this station.",
+  working: "working", broken: "out of service", unknown: "unknown", lift: "Lift", escalator: "Escalator", via: "via"
+};
+const DE = {}; document.querySelectorAll("[data-i]").forEach(e => DE[e.dataset.i] = e.innerHTML);
+document.querySelectorAll("[data-i-aria]").forEach(e => DE[e.dataset.iAria] = e.getAttribute("aria-label"));
+Object.assign(DE, { onTime: "pünktlich", cancelled: "fällt aus", empty: "In den nächsten 90 Minuten fährt hier nichts ab.",
+  offline: "Live-Daten gerade nicht erreichbar – der Server startet vielleicht neu.", updated: "Stand",
+  liftsLive: "Live-Status von DB FaSta.", liftsNone: "Für diesen Bahnhof gibt es keine Aufzugsdaten.",
+  working: "in Betrieb", broken: "außer Betrieb", unknown: "unbekannt", lift: "Aufzug", escalator: "Rolltreppe", via: "über" });
+
+let lang = "de";
+try { lang = localStorage.getItem("lang") || (/^de\b/i.test(navigator.language) ? "de" : "en"); } catch (e) {}
+const T = k => (lang === "en" ? EN : DE)[k] ?? DE[k];
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i]").forEach(e => { e.innerHTML = T(e.dataset.i); });
+  document.querySelectorAll("[data-i-aria]").forEach(e => e.setAttribute("aria-label", T(e.dataset.iAria)));
+  document.getElementById("lang").textContent = lang === "en" ? "DE" : "EN";
+  document.getElementById("lang").setAttribute("aria-label", lang === "en" ? "Auf Deutsch lesen" : "Read in English");
+  document.getElementById("liftstop").textContent = current.name;
+}
+
+const MODE = { HIGHSPEED_RAIL: "m-long", LONG_DISTANCE: "m-long", NIGHT_RAIL: "m-long", REGIONAL_FAST_RAIL: "m-reg", REGIONAL_RAIL: "m-reg", RAIL: "m-reg",
+  SUBURBAN: "m-s", SUBWAY: "m-u", METRO: "m-u", TRAM: "m-tram", BUS: "m-bus", COACH: "m-bus", FERRY: "m-ferry" };
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const hhmm = s => s ? new Date(s).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "–";
+const clock = () => document.getElementById("clock").textContent = new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+clock(); setInterval(clock, 15000);
+
+let current = { id: "de-DELFI_de:03152:33817", name: "Göttingen" };
+let lastRows = null;
+
+function row(r, i) {
+  const late = r.delay != null && r.delay > 0;
+  const status = r.cancelled ? `<small class="bad">${T("cancelled")}</small>`
+    : r.delay == null ? "" : late ? `<small class="${r.delay < 5 ? "late" : "bad"}">+${r.delay}</small>` : `<small class="ok">${T("onTime")}</small>`;
+  const color = r.color && r.color.toLowerCase() !== "ffffff" ? ` style="background:#${esc(r.color)}"` : "";
+  const changed = r.platform && r.scheduledPlatform && r.platform !== r.scheduledPlatform;
+  const via = r.via && r.via.length ? `<small>${T("via")} ${esc(r.via.slice(0, 3).join(", "))}</small>` : "";
+  return `<li class="dep${r.cancelled ? " cancelled" : ""}" style="--i:${i}">
+    <span class="t">${hhmm(r.scheduledTime)}${status}</span>
+    <span class="ln ${MODE[r.mode] || "m-other"}"${color}>${esc(r.line)}</span>
+    <span class="to">${esc(r.headsign || "–")}${via}</span>
+    <span class="pl${changed ? " changed" : ""}">${esc(r.platform || "")}</span></li>`;
+}
+
+function renderBoard(rows) {
+  const board = document.getElementById("board");
+  const now = Date.now() - 60000;
+  const next = rows.filter(r => new Date(r.time).getTime() >= now).slice(0, 7);
+  board.innerHTML = next.length ? next.map(row).join("") : `<li class="dep">${T("empty")}</li>`;
+}
+
+async function loadBoard() {
+  const note = document.getElementById("note");
+  try {
+    const r = await fetch(`${API}/v1/board?stop=${encodeURIComponent(current.id)}`);
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    lastRows = d.rows;
+    renderBoard(d.rows);
+    document.getElementById("live").hidden = false;
+    note.textContent = `${T("updated")} ${hhmm(new Date().toISOString())}`;
+  } catch (e) {
+    document.getElementById("live").hidden = true;
+    if (!lastRows) document.getElementById("board").innerHTML = "";
+    note.textContent = T("offline");
+  }
+}
+
+async function loadLifts() {
+  const list = document.getElementById("liftlist"), note = document.getElementById("liftnote");
+  document.getElementById("liftstop").textContent = current.name;
+  try {
+    const r = await fetch(`${API}/v1/station?stop=${encodeURIComponent(current.id)}`);
+    if (!r.ok) throw new Error(r.status);
+    const st = await r.json();
+    const eq = st.equipment.filter(e => e.type === "lift" || e.type === "escalator")
+      .sort((a, b) => (a.status === "INACTIVE" ? 0 : 1) - (b.status === "INACTIVE" ? 0 : 1)).slice(0, 10);
+    if (!eq.length) { list.innerHTML = ""; note.textContent = T("liftsNone"); return; }
+    list.innerHTML = eq.map(e => {
+      const s = e.status === "ACTIVE" ? ["ok", T("working")] : e.status === "INACTIVE" ? ["bad", T("broken")] : ["", T("unknown")];
+      const icon = e.type === "lift"
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="m9 9 2-2 2 2M9 15l2 2 2-2"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19h5l9-12h4"/></svg>';
+      return `<li>${icon}<span>${esc(e.name || (e.type === "lift" ? T("lift") : T("escalator")))}</span><b class="${s[0]}">${s[1]}</b></li>`;
+    }).join("");
+    note.textContent = st.liveStatus ? T("liftsLive") : "";
+  } catch (e) { list.innerHTML = ""; note.textContent = T("offline"); }
+}
+
+document.querySelectorAll(".stops button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".stops button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  current = { id: b.dataset.stop, name: b.textContent };
+  document.getElementById("stopname").textContent = current.name;
+  lastRows = null;
+  loadBoard(); loadLifts();
+}));
+document.getElementById("lang").addEventListener("click", () => {
+  lang = lang === "en" ? "de" : "en";
+  try { localStorage.setItem("lang", lang); } catch (e) {}
+  applyLang();
+  if (lastRows) renderBoard(lastRows);
+  loadLifts();
+});
+
+applyLang();
+loadBoard(); loadLifts();
+// on narrow screens the route band scrolls: start it at the current stop
+const band = document.querySelector(".band"), here = band.querySelector(".here");
+band.scrollLeft = Math.max(0, here.offsetLeft - 60);
+setInterval(() => { if (!document.hidden) loadBoard(); }, 45000);
+// dark is the default; light is opt-in and remembered
+const themeBtn = document.getElementById("theme");
+const SUN = themeBtn.innerHTML;
+const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>';
+function syncTheme() {
+  const light = document.documentElement.dataset.theme === "light";
+  themeBtn.innerHTML = light ? MOON : SUN;
+  themeBtn.setAttribute("aria-label", light ? (lang === "en" ? "Dark design" : "Dunkles Design") : (lang === "en" ? "Light design" : "Helles Design"));
+  document.querySelector('meta[name="theme-color"]').content = light ? "#f6faf8" : "#0a0f0e";
+}
+themeBtn.addEventListener("click", () => {
+  const light = document.documentElement.dataset.theme !== "light";
+  if (light) document.documentElement.dataset.theme = "light"; else delete document.documentElement.dataset.theme;
+  try { localStorage.setItem("theme", light ? "light" : "dark"); } catch (e) {}
+  syncTheme();
+});
+syncTheme();
+document.getElementById("lang").addEventListener("click", syncTheme);
+</script>
+</body>
+</html>

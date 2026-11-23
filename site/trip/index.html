@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0f0e">
+<meta name="robots" content="noindex">
+<title>Navi – Geteilte Fahrt</title>
+<script>try{if(localStorage.getItem("theme")==="light")document.documentElement.dataset.theme="light"}catch(e){}</script>
+<link rel="icon" href="../favicon.png">
+<link rel="preload" href="../fonts/dinish.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .stop { --dot: 24px; }
+  .title { margin: 0; font: 800 clamp(36px, 7vw, 68px)/.95 var(--din); font-stretch: 82%; letter-spacing: -.01em; text-wrap: balance; }
+  .when { margin: 14px 0 0; font-size: 19px; font-weight: 500; }
+  .now { margin-top: 22px; padding: 20px 22px; border-radius: 24px 24px 24px 8px; background: var(--live-plate); color: var(--live-plate-ink); }
+  .now b { display: block; font: 800 clamp(22px, 3.4vw, 30px)/1.2 var(--din); }
+  .now span { display: block; margin-top: 4px; font-size: 18px; font-weight: 500; }
+  .now.bad { background: var(--bad); color: #2b0000; }
+  .meta { display: flex; align-items: center; gap: 12px; margin: 14px 0 0; color: var(--ink-2); font-size: 15px; min-height: 1.5em; }
+
+  .route { list-style: none; margin: 40px 0 0; padding: 0; }
+  .route > li { position: relative; }
+  /* the pole takes the line's colour while you ride it */
+  .leg::before { content: ""; position: absolute; left: calc(-1 * var(--dot) - 6px); top: 26px; bottom: 26px; width: 12px; border-radius: 6px; background: var(--c, var(--teal)); }
+  .walk { padding: 14px 0; color: var(--ink-2); font-size: 16px; }
+  .pt { position: relative; display: grid; grid-template-columns: 70px 1fr auto; gap: 14px; align-items: baseline; padding: 12px 0; }
+  .pt::before { content: ""; position: absolute; left: calc(-1 * var(--dot) - 11px); top: 16px; width: 22px; height: 22px; border-radius: 50%; background: var(--ground); border: 5px solid var(--c, var(--teal)); }
+  .pt .t { font: 800 22px/1 var(--din); font-stretch: 110%; }
+  .pt .t small { display: block; margin-top: 4px; font: 700 13px/1 var(--din); font-stretch: 100%; }
+  .pt .n { font-weight: 700; font-size: 20px; line-height: 1.2; }
+  .pt .pl { font: 800 16px/1 var(--din); padding: 7px 8px; border-radius: 8px; background: var(--surface-hi); }
+  .pt .pl.changed { background: var(--live-plate); color: var(--live-plate-ink); }
+  .ride { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 6px 0 6px 84px; }
+  .ride .ln { font: 700 15px/1 var(--din); padding: 7px 9px 6px; border-radius: 8px; color: #fff; }
+  .ride .hs { font-weight: 700; }
+  .ride details { width: 100%; color: var(--ink-2); font-size: 16px; }
+  .ride summary { cursor: pointer; padding: 4px 0; width: max-content; }
+  .ride details ol { list-style: none; margin: 6px 0 0; padding: 0; }
+  .ride details li { display: grid; grid-template-columns: 56px 1fr; gap: 8px; padding: 3px 0; }
+  .alert { margin: 6px 0 0 84px; padding: 10px 14px; border-radius: 14px; background: var(--surface-hi); font-size: 15px; }
+  .passed { opacity: .45; }
+  .next::before { background: var(--live) !important; border-color: var(--live) !important; box-shadow: 0 0 0 7px color-mix(in srgb, var(--live) 25%, transparent); }
+  .next .n::after { content: attr(data-next); display: block; font: 700 14px/1.4 var(--din); color: var(--live); }
+  .cancel .t, .cancel .n { text-decoration: line-through; }
+  .msg { margin-top: 40px; font-size: 20px; color: var(--ink-2); max-width: 40ch; }
+  .cta { margin-top: 64px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; color: var(--ink-2); }
+  @media (max-width: 720px) {
+    .stop { --dot: 16px; }
+    .pt { grid-template-columns: 58px 1fr auto; gap: 10px; }
+    .ride { padding-left: 68px; }
+    .alert { margin-left: 68px; }
+  }
+</style>
+</head>
+<body>
+<main class="stop">
+  <a class="disc" href="../" aria-label="Navi"><img src="../logo.png" alt="" width="70" height="70"></a>
+  <div class="topbar"><button class="chip-btn theme-btn" id="theme" type="button" aria-label="Helles Design"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg></button>
+    <button class="chip-btn" id="lang" type="button">EN</button></div>
+
+  <section class="mounted">
+    <div class="plate">
+      <h1 class="title" id="title">…</h1>
+      <p class="when" id="when"></p>
+    </div>
+    <div class="now" id="now" hidden><b id="nowT"></b><span id="nowS"></span></div>
+    <p class="meta" id="meta" aria-live="polite"></p>
+  </section>
+
+  <ol class="route" id="route"></ol>
+  <p class="msg" id="msg"></p>
+
+  <div class="cta">
+    <a class="btn btn-main" href="../" id="ctaBtn">Navi</a>
+    <span id="ctaText"></span>
+  </div>
+</main>
+
+<script>
+// local previews talk to a dev server; the published site always uses the real API
+const API = /^(localhost|127\.0\.0\.1|10\.0\.2\.2)$/.test(location.hostname) ? `http://${location.hostname}:8090` : "https://navi-api.taymaerz.de";
+const L = {
+  de: { loading: "Fahrt wird geladen …", notFound: "Diesen Link gibt es nicht oder er ist abgelaufen (Links gelten 7 Tage).", error: "Live-Daten gerade nicht erreichbar. Neuer Versuch läuft …",
+    updated: "Live · Stand", walk: "Min. Fußweg", change: "Umstieg", cancelled: "fällt aus", onTime: "pünktlich", platform: "Gl.",
+    leaves: m => `Abfahrt in ${m} Min.`, leavesAt: t => `Abfahrt um ${t}`, board: (l, s, p) => `${l} ab ${s}${p ? `, Gleis ${p}` : ""}`,
+    riding: (l, h) => `Im ${l} Richtung ${h}`, getOff: (s, t, m) => `Aussteigen in ${s} um ${t} (in ${m} Min.)`,
+    changeAt: (s, m) => `Umstieg in ${s} · noch ${m} Min.`, arrived: "Angekommen.", partCancelled: "Ein Teil dieser Fahrt fällt aus.",
+    stops: n => `${n} Zwischenhalt${n === 1 ? "" : "e"}`, next: "nächster Halt", cta: "Live mitfahren wie hier – mit der App.", get: "Navi holen", shared: "Geteilte Fahrt" },
+  en: { loading: "Loading trip…", notFound: "This link doesn't exist or has expired (links last 7 days).", error: "Live data unavailable right now. Retrying…",
+    updated: "Live · updated", walk: "min walk", change: "Change", cancelled: "cancelled", onTime: "on time", platform: "Pl.",
+    leaves: m => `Leaves in ${m} min`, leavesAt: t => `Leaves at ${t}`, board: (l, s, p) => `${l} from ${s}${p ? `, platform ${p}` : ""}`,
+    riding: (l, h) => `On the ${l} towards ${h}`, getOff: (s, t, m) => `Get off at ${s} at ${t} (in ${m} min)`,
+    changeAt: (s, m) => `Change at ${s} · ${m} min left`, arrived: "Arrived.", partCancelled: "Part of this trip is cancelled.",
+    stops: n => `${n} stop${n === 1 ? "" : "s"}`, next: "next stop", cta: "Follow trips live like this – with the app.", get: "Get Navi", shared: "Shared trip" }
+};
+let lang = "de";
+try { lang = localStorage.getItem("lang") || (/^de\b/i.test(navigator.language) ? "de" : "en"); } catch (e) {}
+const T = () => L[lang];
+const MODE = { HIGHSPEED_RAIL: "#b0283a", LONG_DISTANCE: "#b0283a", NIGHT_RAIL: "#b0283a", REGIONAL_FAST_RAIL: "#5b4ba8", REGIONAL_RAIL: "#5b4ba8", RAIL: "#5b4ba8",
+  SUBURBAN: "#2e7d32", SUBWAY: "#1565c0", METRO: "#1565c0", TRAM: "#c2410c", BUS: "#7b1fa2", COACH: "#7b1fa2", FERRY: "#00838f" };
+const walkish = l => ["WALK", "BIKE", "CAR"].includes(l.mode);
+const color = l => l.color && l.color.toLowerCase() !== "ffffff" ? "#" + l.color : (MODE[l.mode] || "#546e7a");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const loc = () => lang === "en" ? "en-GB" : "de-DE";
+const hhmm = s => s ? new Date(s).toLocaleTimeString(loc(), { hour: "2-digit", minute: "2-digit" }) : "–";
+const mins = (a, b) => Math.round((new Date(a) - new Date(b)) / 60000);
+const id = new URLSearchParams(location.search).get("id") || location.hash.slice(1);
+let data = null;
+
+function delay(actual, sched, rt, cancelled) {
+  if (cancelled) return `<small class="bad">${T().cancelled}</small>`;
+  if (!rt || !actual || !sched) return "";
+  const d = mins(actual, sched);
+  return d <= 0 ? `<small class="ok">${T().onTime}</small>` : `<small class="${d < 5 ? "late" : "bad"}">+${d}</small>`;
+}
+function plat(p) {
+  if (!p.platform) return "<span></span>";
+  const ch = p.scheduledPlatform && p.scheduledPlatform !== p.platform;
+  return `<span class="pl${ch ? " changed" : ""}">${T().platform} ${esc(p.platform)}</span>`;
+}
+
+function status(it) {
+  const now = Date.now(), legs = it.legs.filter(l => !walkish(l));
+  if (!legs.length) return null;
+  const dep = l => new Date(l.from.departure || l.from.scheduledDeparture), arr = l => new Date(l.to.arrival || l.to.scheduledArrival);
+  const m = t => Math.max(0, Math.round((t - now) / 60000));
+  if (now < dep(legs[0])) {
+    const f = legs[0], left = m(dep(f));
+    return [left <= 120 ? T().leaves(left) : T().leavesAt(hhmm(f.from.departure)), T().board(f.line || "", f.from.name, f.from.platform)];
+  }
+  for (let i = 0; i < legs.length; i++) {
+    const l = legs[i], n = legs[i + 1];
+    if (now >= dep(l) && now < arr(l)) return [T().riding(l.line || "", l.headsign || l.to.name), T().getOff(l.to.name, hhmm(l.to.arrival || l.to.scheduledArrival), m(arr(l)))];
+    if (n && now >= arr(l) && now < dep(n)) return [T().changeAt(n.from.name, m(dep(n))), [l.to.platform, n.from.platform].filter(Boolean).map(p => `${T().platform} ${p}`).join(" → ") || (n.line || "")];
+  }
+  return [T().arrived, legs[legs.length - 1].to.name];
+}
+
+function render() {
+  const it = data;
+  document.documentElement.lang = lang;
+  document.getElementById("lang").textContent = lang === "en" ? "DE" : "EN";
+  document.getElementById("ctaText").textContent = T().cta;
+  document.getElementById("ctaBtn").textContent = T().get;
+  if (!it) return;
+  const first = it.legs[0].from, last = it.legs[it.legs.length - 1].to;
+  document.title = `Navi – ${first.name} → ${last.name}`;
+  document.getElementById("title").textContent = `${first.name} → ${last.name}`;
+  document.getElementById("when").textContent = `${new Date(it.start).toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long" })} · ${hhmm(it.start)} – ${hhmm(it.end)}`;
+  const cancelled = it.legs.some(l => l.cancelled || l.from.cancelled || l.to.cancelled);
+  const st = cancelled ? [T().partCancelled, ""] : status(it);
+  const now = document.getElementById("now");
+  now.hidden = !st; now.classList.toggle("bad", cancelled);
+  if (st) { document.getElementById("nowT").textContent = st[0]; document.getElementById("nowS").textContent = st[1]; }
+
+  // which stop comes next (for passed/next styling)
+  const t = Date.now();
+  const time = p => new Date(p.departure || p.arrival || p.scheduledDeparture || p.scheduledArrival).getTime();
+  let nextMarked = false;
+  const cls = p => {
+    if (time(p) < t) return " passed";
+    if (!nextMarked) { nextMarked = true; return " next"; }
+    return "";
+  };
+  let h = "";
+  it.legs.forEach((l, i) => {
+    if (walkish(l)) {
+      if (l.duration >= 60) h += `<li class="walk">${i > 0 && i < it.legs.length - 1 ? T().change + " · " : ""}${Math.round(l.duration / 60)} ${T().walk}</li>`;
+      return;
+    }
+    const c = color(l);
+    const stops = (l.stops || []).map(s => `<li><span>${hhmm(s.scheduledDeparture || s.scheduledArrival)}</span><span>${esc(s.name)}</span></li>`).join("");
+    h += `<li class="leg" style="--c:${c}">
+      <div class="pt${cls(l.from)}${l.from.cancelled ? " cancel" : ""}" data-next="${T().next}"><span class="t">${hhmm(l.from.scheduledDeparture)}${delay(l.from.departure, l.from.scheduledDeparture, l.realtime, l.from.cancelled)}</span><span class="n">${esc(l.from.name)}</span>${plat(l.from)}</div>
+      <div class="ride"><span class="ln" style="background:${c}">${esc(l.line || "")}</span><span class="hs">→ ${esc(l.headsign || l.to.name)}</span>
+        ${stops ? `<details><summary>${T().stops(l.stops.length)}</summary><ol>${stops}</ol></details>` : ""}</div>
+      ${(l.alerts || []).map(a => `<div class="alert">${esc([a.header, a.text].filter(Boolean).join(": "))}</div>`).join("")}
+      <div class="pt${cls(l.to)}${l.to.cancelled ? " cancel" : ""}" data-next="${T().next}"><span class="t">${hhmm(l.to.scheduledArrival)}${delay(l.to.arrival, l.to.scheduledArrival, l.realtime, l.to.cancelled)}</span><span class="n">${esc(l.to.name)}</span>${plat(l.to)}</div>
+    </li>`;
+  });
+  document.getElementById("route").innerHTML = h;
+}
+
+async function load() {
+  const meta = document.getElementById("meta"), msg = document.getElementById("msg");
+  if (!id) { msg.textContent = T().notFound; return false; }
+  try {
+    const r = await fetch(`${API}/v1/share?id=${encodeURIComponent(id)}`);
+    if (r.status === 404) { msg.textContent = T().notFound; document.getElementById("title").textContent = T().shared; return false; }
+    if (!r.ok) throw new Error(r.status);
+    data = await r.json();
+    msg.textContent = "";
+    render();
+    const live = data.legs.some(l => l.realtime);
+    meta.innerHTML = live ? `<span class="live"><i></i>${T().updated} ${hhmm(new Date().toISOString())}</span>` : "";
+  } catch (e) {
+    meta.textContent = T().error;
+  }
+  return true;
+}
+
+document.getElementById("lang").addEventListener("click", () => {
+  lang = lang === "en" ? "de" : "en";
+  try { localStorage.setItem("lang", lang); } catch (e) {}
+  render(); if (!data) document.getElementById("msg").textContent = "";
+});
+document.getElementById("title").textContent = T().loading;
+render();
+load().then(keep => { if (keep) setInterval(() => { if (!document.hidden) load(); }, 30000); });
+// dark is the default; light is opt-in and remembered
+const themeBtn = document.getElementById("theme");
+const SUN = themeBtn.innerHTML;
+const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>';
+function syncTheme() {
+  const light = document.documentElement.dataset.theme === "light";
+  themeBtn.innerHTML = light ? MOON : SUN;
+  themeBtn.setAttribute("aria-label", light ? (lang === "en" ? "Dark design" : "Dunkles Design") : (lang === "en" ? "Light design" : "Helles Design"));
+  document.querySelector('meta[name="theme-color"]').content = light ? "#f6faf8" : "#0a0f0e";
+}
+themeBtn.addEventListener("click", () => {
+  const light = document.documentElement.dataset.theme !== "light";
+  if (light) document.documentElement.dataset.theme = "light"; else delete document.documentElement.dataset.theme;
+  try { localStorage.setItem("theme", light ? "light" : "dark"); } catch (e) {}
+  syncTheme();
+});
+syncTheme();
+document.getElementById("lang").addEventListener("click", syncTheme);
+</script>
+</body>
+</html>
