@@ -9,20 +9,20 @@
 <script>try{if(localStorage.getItem("theme")==="light")document.documentElement.dataset.theme="light"}catch(e){}</script>
 <link rel="icon" href="../logo.svg" type="image/svg+xml">
 <link rel="icon" href="../favicon.png" sizes="64x64">
-<link rel="preload" href="../fonts/atkinson-next.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/google-sans-flex.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../style.css">
 <style>
   main { max-width: 720px; }
-  .title { margin: 20px 0 0; font-size: clamp(26px, 4.4vw, 36px); line-height: 1.15; font-weight: 800; letter-spacing: -.015em; text-wrap: balance; }
+  .title { margin: 20px 0 0; font-size: clamp(26px, 4.4vw, 36px); line-height: 1.15; font-weight: 700; letter-spacing: -.015em; text-wrap: balance; }
   .title .arrow { color: var(--ink-2); font-weight: 400; }
   .when { margin: 6px 0 24px; color: var(--ink-2); }
-  .now-t { margin: 0; font-size: clamp(26px, 4.6vw, 34px); line-height: 1.15; font-weight: 800; color: #ebbf89; }
-  .now-t.bad { color: #ff9993; }
+  .now-t { margin: 0; font-size: clamp(26px, 4.6vw, 34px); line-height: 1.15; font-weight: 700; color: #d6c3a5; }
+  .now-t.bad { color: #e8a19b; }
   .now-s { margin: 6px 0 0; font-size: 19px; }
   .bar { position: relative; height: 23px; margin: 22px 11px 0; }
   .bar .track, .bar .seg, .bar .done { position: absolute; top: 9px; height: 5px; border-radius: 3px; }
   .bar .track { left: 0; right: 0; background: var(--track); }
-  .bar .done { left: 0; background: #ebbf89; }
+  .bar .done { left: 0; background: #d6c3a5; }
   .bar .dot { position: absolute; top: 0; margin-left: -11.5px; }
   .ends { display: flex; justify-content: space-between; margin-top: 8px; font-size: 14px; font-weight: 700; color: var(--glass-dim); }
   .ends .mid { display: flex; align-items: center; gap: 6px; font-weight: 400; }
@@ -36,11 +36,11 @@
   .pt.passed::before { background: var(--amber); border-color: var(--amber); }
   .pt.next::before { border-color: var(--next); transform: scale(1.18); }
   .pt.passed { color: var(--ink-2); }
-  .pt .t { font-weight: 800; font-size: 19px; line-height: 1.2; }
+  .pt .t { font-weight: 700; font-size: 19px; line-height: 1.2; }
   .pt .t small { display: block; font-size: 13px; font-weight: 700; }
   .pt .n { font-weight: 700; font-size: 18px; line-height: 1.3; }
   .pt.next .n::after { content: attr(data-next); display: block; font-size: 14px; color: var(--next); }
-  .pl { font-weight: 800; font-size: 15px; padding: 4px 8px; border-radius: 8px; background: var(--raised); white-space: nowrap; }
+  .pl { font-weight: 700; font-size: 15px; padding: 4px 8px; border-radius: 8px; background: var(--raised); white-space: nowrap; }
   .pl.changed { background: var(--amber); color: var(--on-amber); }
   .cancel .t, .cancel .n { text-decoration: line-through; }
   .ride { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 4px 0 4px 70px; }
@@ -136,10 +136,16 @@ ICON.START = ICON.STRAIGHT; ICON.SLIGHT_LEFT = ICON.LEFT; ICON.SLIGHT_RIGHT = IC
 let lang = "de";
 try { lang = localStorage.getItem("lang") || (/^de\b/i.test(navigator.language) ? "de" : "en"); } catch (e) {}
 const T = () => L[lang];
-const MODE = { HIGHSPEED_RAIL: "#b0283a", LONG_DISTANCE: "#b0283a", NIGHT_RAIL: "#b0283a", REGIONAL_FAST_RAIL: "#5b4ba8", REGIONAL_RAIL: "#5b4ba8", RAIL: "#5b4ba8",
-  SUBURBAN: "#2e7d32", SUBWAY: "#1565c0", METRO: "#1565c0", TRAM: "#c2410c", BUS: "#7b1fa2", COACH: "#7b1fa2", FERRY: "#00838f" };
+const MODE = { HIGHSPEED_RAIL: "#8e3b45", LONG_DISTANCE: "#8e3b45", NIGHT_RAIL: "#8e3b45", REGIONAL_FAST_RAIL: "#5a5290", REGIONAL_RAIL: "#5a5290", RAIL: "#5a5290",
+  SUBURBAN: "#3f6e47", SUBWAY: "#3d5f8c", METRO: "#3d5f8c", TRAM: "#9a5a36", BUS: "#6e4a85", COACH: "#6e4a85", FERRY: "#3d7479" };
 const walkish = l => ["WALK", "BIKE", "CAR"].includes(l.mode);
-const color = l => l.color && /^[0-9a-f]{6}$/i.test(l.color) && l.color.toLowerCase() !== "ffffff" ? "#" + l.color : (MODE[l.mode] || "#546e7a");
+// operator colours are often pure signal colours; take the edge off like the app does
+const calm = hex => { const n = parseInt(hex, 16), r = (n >> 16) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+  const h = d === 0 ? 0 : mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  return `hsl(${Math.round(h * 60)} ${Math.round(Math.min(s, .45) * 100)}% ${Math.round(Math.min(Math.max(l, .3), .42) * 100)}%)`; };
+const color = l => l.color && /^[0-9a-f]{6}$/i.test(l.color) && l.color.toLowerCase() !== "ffffff" ? calm(l.color) : (MODE[l.mode] || "#56656d");
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const loc = () => lang === "en" ? "en-GB" : "de-DE";
 const hhmm = s => s ? new Date(s).toLocaleTimeString(loc(), { hour: "2-digit", minute: "2-digit" }) : "";
@@ -248,7 +254,7 @@ function render() {
       <div class="ride"><span class="ln" style="background:${c}">${esc(l.line || "")}</span><span class="hs">→ ${esc(l.headsign || l.to.name)}</span>
         ${l.operator ? `<span class="op">${esc(l.operator)}</span>` : ""}
         ${stops ? `<details><summary>${T().stops(l.stops.length)}</summary><ol class="stops">${stops}</ol></details>` : ""}</div>
-      ${(l.alerts || []).map(a => `<div class="alert">${esc([a.header, a.text].filter(Boolean).join(": "))}</div>`).join("")}
+      ${[...new Set([...(l.notes || []), ...(l.alerts || []).map(a => [a.header, a.text].filter(Boolean).join(": "))])].map(t => `<div class="alert">${esc(t)}</div>`).join("")}
       <div class="pt${cls(l.to)}${l.to.cancelled ? " cancel" : ""}" data-next="${T().next}"><span class="t">${hhmm(l.to.scheduledArrival)}${delay(l.to.arrival, l.to.scheduledArrival, l.realtime, l.to.cancelled)}</span><span class="n">${esc(l.to.name)}</span>${plat(l.to)}</div>
     </li>`;
   });

@@ -1,5 +1,9 @@
 package app.navi.ui
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -65,15 +69,15 @@ import app.navi.minutesUntil
 // ---------- transport modes ----------
 
 enum class ModeGroup(val label: Int, val icon: ImageVector, val color: Color) {
-    LONG(R.string.mode_long, Icons.Filled.Train, Color(0xFFB0283A)),
-    REGIONAL(R.string.mode_regional, Icons.Filled.DirectionsRailway, Color(0xFF5B4BA8)),
-    SUBURBAN(R.string.mode_suburban, Icons.Filled.DirectionsTransit, Color(0xFF2E7D32)),
-    SUBWAY(R.string.mode_subway, Icons.Filled.DirectionsSubway, Color(0xFF1565C0)),
-    TRAM(R.string.mode_tram, Icons.Filled.Tram, Color(0xFFC2410C)),
-    BUS(R.string.mode_bus, Icons.Filled.DirectionsBus, Color(0xFF7B1FA2)),
-    FERRY(R.string.mode_ferry, Icons.Filled.DirectionsBoat, Color(0xFF00838F)),
+    LONG(R.string.mode_long, Icons.Filled.Train, Color(0xFF8E3B45)),
+    REGIONAL(R.string.mode_regional, Icons.Filled.DirectionsRailway, Color(0xFF5A5290)),
+    SUBURBAN(R.string.mode_suburban, Icons.Filled.DirectionsTransit, Color(0xFF3F6E47)),
+    SUBWAY(R.string.mode_subway, Icons.Filled.DirectionsSubway, Color(0xFF3D5F8C)),
+    TRAM(R.string.mode_tram, Icons.Filled.Tram, Color(0xFF9A5A36)),
+    BUS(R.string.mode_bus, Icons.Filled.DirectionsBus, Color(0xFF6E4A85)),
+    FERRY(R.string.mode_ferry, Icons.Filled.DirectionsBoat, Color(0xFF3D7479)),
     WALK(R.string.mode_walk, Icons.AutoMirrored.Filled.DirectionsWalk, Color(0xFF6B7280)),
-    OTHER(R.string.mode_other, Icons.Filled.DirectionsTransit, Color(0xFF546E7A));
+    OTHER(R.string.mode_other, Icons.Filled.DirectionsTransit, Color(0xFF56656D));
 
     companion object {
         fun of(mode: String): ModeGroup = when (mode) {
@@ -103,8 +107,8 @@ fun parseHex(hex: String?): Color? =
 /** Coloured line badge, e.g. [🚆 ICE 575]. Uses the operator's route colour when known. */
 @Composable
 fun LineChip(line: String?, mode: String, color: String? = null, textColor: String? = null, modifier: Modifier = Modifier) {
-    val bg = parseHex(color)?.takeIf { it != Color.White } ?: ModeGroup.of(mode).color
-    val fg = parseHex(textColor)?.takeIf { color != null } ?: if (bg.luminance() > 0.5f) Color.Black else Color.White
+    val bg = (parseHex(color)?.takeIf { it != Color.White } ?: ModeGroup.of(mode).color).calm()
+    val fg = Color.White.copy(alpha = .94f) // calm() keeps every chip dark enough for white text
     val modeLabel = stringResource(ModeGroup.of(mode).label)
     Row(
         modifier
@@ -270,3 +274,42 @@ fun dur(seconds: Int) = formatDuration(seconds, stringResource(R.string.unit_h),
 
 @Composable
 fun transfersText(n: Int) = if (n == 0) stringResource(R.string.direct) else pluralStringResource(R.plurals.transfers, n, n)
+
+/** Messages for a ride: short reasons ("Reparatur an einem Signal") in full, long notices folded away. */
+@Composable
+fun ReasonList(notes: List<String>, modifier: Modifier = Modifier) {
+    val (short, long) = notes.distinct().partition { it.length <= 120 }
+    if (short.isEmpty() && long.isEmpty()) return
+    var open by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
+    val c = MaterialTheme.colorScheme
+    Column(modifier) {
+        short.forEach { n ->
+            Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.Top) {
+                Icon(Icons.Filled.Info, null, Modifier.padding(top = 2.dp).size(15.dp), tint = c.tertiary)
+                Spacer(Modifier.width(6.dp))
+                Text(n, style = MaterialTheme.typography.bodySmall, color = c.onSurface)
+            }
+        }
+        if (long.isNotEmpty()) {
+            Text(
+                androidx.compose.ui.res.pluralStringResource(if (open) R.plurals.hide_notices else R.plurals.more_notices, long.size, long.size),
+                Modifier.padding(top = 4.dp).clip(RoundedCornerShape(6.dp)).clickable { open = !open }.padding(vertical = 4.dp),
+                style = MaterialTheme.typography.labelLarge, color = c.primary,
+            )
+            if (open) long.forEach { n ->
+                Text(n, Modifier.padding(top = 6.dp).clip(RoundedCornerShape(12.dp)).background(c.surfaceContainerHigh).padding(10.dp), style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+}
+
+/** Hands a board row's messages to the trip view (they don't come with the trip itself). */
+object TripContext {
+    private var key: String? = null
+    private var notes: List<String> = emptyList()
+    private var attributes: List<String> = emptyList()
+    fun put(tripId: String, notes: List<String>, attributes: List<String> = emptyList()) {
+        key = tripId; this.notes = notes; this.attributes = attributes
+    }
+    fun take(tripId: String): Pair<List<String>, List<String>> = if (key == tripId) notes to attributes else emptyList<String>() to emptyList()
+}

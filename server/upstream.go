@@ -103,8 +103,9 @@ type Leg struct {
 		Points    string `json:"points"`
 		Precision int    `json:"precision"`
 	} `json:"geometry"`
-	Alerts []Alert `json:"alerts"`
-	Steps  []Step  `json:"steps,omitempty"` // walking/cycling directions
+	Alerts []Alert  `json:"alerts"`
+	Steps  []Step   `json:"steps,omitempty"` // walking/cycling directions
+	Notes  []string `json:"notes,omitempty"` // DB messages for this ride, e.g. why it's late
 }
 
 type Alert struct {

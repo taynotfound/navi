@@ -16,7 +16,7 @@ Action: get the APK (GitHub Releases / Obtainium; F-Droid soon). Proof: a real l
 
 THESIS: The site is the passenger display above a train door: dark glass, amber text, one line with its stops, the next one ringed in blue. It refuses both the app-landing template and the literal bus-stop costume the previous version wore.
 
-OWN-WORLD: Blue-graphite ground (#0c0e12), display glass panels (#161a1f) that stay dark in light mode, amber (#ebbf89) for what matters now, blue ring (#b0c8ec) for "next", line colours only on rides. Atkinson Hyperlegible Next throughout, tabular numbers. Route strips (dots on a 5px track) are the only ornament.
+OWN-WORLD: Blue-graphite ground (#0c0e12), display glass panels (#161a1f) that stay dark in light mode, muted sand (#d6c3a5) for what matters now, dusty blue ring (#afbccf) for "next", damped line colours only on rides. Google Sans Flex throughout, tabular numbers. Route strips (dots on a 5px track) are the only ornament.
 
 STORY: The visitor reads one plain promise, sees a real live board for a real stop, switches stops along a route strip, then reads tay's short note and the feature list drawn as a ride. Downloads the APK.
 

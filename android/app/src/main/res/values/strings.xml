@@ -251,4 +251,18 @@
     <string name="step_stairs">Take the stairs</string>
     <string name="step_elevator">Take the lift</string>
     <string name="step_escalator">Take the escalator</string>
+    <string name="n_min">%d min</string>
+    <string name="arrives_late">arrives %d min late</string>
+    <string name="whole_ride">Whole ride, map and all stops</string>
+    <string name="vehicle_estimated">position on the map is estimated</string>
+    <string name="you_board">You get on here</string>
+    <string name="you_get_off">You get off here</string>
+    <string name="risk_cancelled">%1$s is cancelled.</string>
+    <string name="risk_missed">The change at %1$s won\'t work anymore, you\'re %2$d min short.</string>
+    <string name="risk_tight">The change at %1$s gets tight: %2$d min to switch.</string>
+    <string name="alternatives_from">Other ways from %1$s:</string>
+    <string name="alternatives_searching">Looking for alternatives…</string>
+    <string name="alternatives_none">Nothing better right now. Stay put or ask staff.</string>
+    <plurals name="more_notices"><item quantity="one">%d more notice</item><item quantity="other">%d more notices</item></plurals>
+    <plurals name="hide_notices"><item quantity="one">Hide notice</item><item quantity="other">Hide notices</item></plurals>
 </resources>

@@ -32,6 +32,8 @@ type Station struct {
 	Entrances     []string      `json:"entrances"`
 	Platforms     []Platform    `json:"platforms"`
 	Equipment     []Equipment   `json:"equipment"`
+	Lat           float64       `json:"lat,omitempty"` // first centroid in the StopPlace
+	Lon           float64       `json:"lon,omitempty"`
 }
 
 type Accessibility struct {
@@ -152,6 +154,9 @@ func ParseStopPlace(xml string) *Station {
 	for _, m := range reEVA.FindAllStringSubmatch(xml, -1) {
 		st.EVAs = append(st.EVAs, m[1])
 	}
+	if lat, lon := floatPtr(tag("Latitude", xml)), floatPtr(tag("Longitude", xml)); lat != nil && lon != nil {
+		st.Lat, st.Lon = *lat, *lon
+	}
 	town := strings.TrimSpace(tag("PostCode", xml) + " " + tag("Town", xml))
 	st.Address = strings.Trim(tag("Street", xml)+", "+town, ", ")
 
@@ -269,6 +274,26 @@ func (x *StationIndex) Get(key string) *Station {
 	x.mu.RLock()
 	defer x.mu.RUnlock()
 	return x.byKey[key]
+}
+
+// Nearest returns the closest station within maxM metres, for stops DB doesn't list itself
+// (Frankfurt's underground S-Bahn platforms belong to "Frankfurt Hbf" up top).
+func (x *StationIndex) Nearest(lat, lon, maxM float64) *Station {
+	x.mu.RLock()
+	defer x.mu.RUnlock()
+	var best *Station
+	bestD := maxM
+	k := math.Cos(lat * math.Pi / 180)
+	for _, s := range x.byKey {
+		if s.Lat == 0 {
+			continue
+		}
+		dy, dx := (s.Lat-lat)*111_320, (s.Lon-lon)*111_320*k
+		if d := math.Hypot(dx, dy); d < bestD {
+			best, bestD = s, d
+		}
+	}
+	return best
 }
 
 func (x *StationIndex) Stats() (int, time.Time) {

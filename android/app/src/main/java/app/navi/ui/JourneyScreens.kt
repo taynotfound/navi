@@ -1,5 +1,7 @@
 package app.navi.ui
 
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.ui.text.withStyle
 import app.navi.Step
 import androidx.compose.material.icons.filled.Straight
 import androidx.compose.material.icons.filled.Escalator
@@ -404,7 +406,7 @@ fun ResultsScreen(nav: Nav) {
                 }
                 else -> {
                     if (earlier != null) item {
-                        TextButton(onClick = { load(earlier, "earlier") }, enabled = loading == null, modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(onClick = { load(earlier, "earlier") }, enabled = loading == null, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
                             Text(stringResource(if (loading == "earlier") R.string.loading_short else R.string.earlier))
                         }
                     }
@@ -413,10 +415,11 @@ fun ResultsScreen(nav: Nav) {
                             Card(
                                 onClick = { JourneyForm.selected = d; nav.itinerary() },
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
                             ) {
-                                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.AutoMirrored.Filled.DirectionsWalk, null)
+                                Row(Modifier.padding(horizontal = 18.dp, vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.AutoMirrored.Filled.DirectionsWalk, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                     Spacer(Modifier.width(12.dp))
                                     Text(stringResource(R.string.on_foot, dur(d.duration)), style = MaterialTheme.typography.titleSmall)
                                     d.legs.firstOrNull()?.distance?.let { Text(", ${formatDistance(it)}") }
@@ -429,7 +432,7 @@ fun ResultsScreen(nav: Nav) {
                     }
                     if (error != null) item { Text(error!!, Modifier.padding(16.dp), color = MaterialTheme.colorScheme.error) }
                     if (later != null) item {
-                        OutlinedButton(onClick = { load(later, "later") }, enabled = loading == null, modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                        OutlinedButton(onClick = { load(later, "later") }, enabled = loading == null, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
                             Text(stringResource(if (loading == "later") R.string.loading_short else R.string.later))
                         }
                     }
@@ -442,63 +445,73 @@ fun ResultsScreen(nav: Nav) {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ItineraryCard(it: Itinerary, onClick: () -> Unit) {
+    val c = MaterialTheme.colorScheme
     val transit = it.legs.filterNot { l -> l.isWalk }
     val first = transit.firstOrNull()
-    val last = transit.lastOrNull()
     val cancelled = it.legs.any { l -> l.cancelled || l.from.cancelled || l.to.cancelled }
     val depDelay = first?.let { l -> delayOf(l.from.departure, l.from.scheduledDeparture, l.realtime) }
-    val arrDelay = last?.let { l -> delayOf(l.to.arrival, l.to.scheduledArrival, l.realtime) }
-    ElevatedCard(
+    val arrDelay = transit.lastOrNull()?.let { l -> delayOf(l.to.arrival, l.to.scheduledArrival, l.realtime) }
+    Card(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp),
         shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = c.surfaceContainer),
     ) {
-        Column(Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.Top) {
-                Column(Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(hhmm(it.start), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
-                        Text("  –  ", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(hhmm(it.end), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
-                    }
-                    if ((depDelay ?: 0) > 0 || (arrDelay ?: 0) > 0) {
-                        val dep = stringResource(R.string.departure)
-                        val arr = stringResource(R.string.arrival)
-                        Text(
-                            listOfNotNull(depDelay?.takeIf { d -> d > 0 }?.let { d -> "$dep +$d" }, arrDelay?.takeIf { d -> d > 0 }?.let { d -> "$arr +$d" }).joinToString(", "),
-                            color = delayColor(maxOf(depDelay ?: 0, arrDelay ?: 0)),
-                            style = MaterialTheme.typography.labelLarge,
-                        )
-                    } else if (first?.realtime == true) {
-                        Text(stringResource(R.string.on_time), color = StatusColors.onTime, style = MaterialTheme.typography.labelLarge)
-                    }
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(dur(it.duration), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                    Text(transfersText(it.transfers), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+        Column(Modifier.padding(horizontal = 18.dp, vertical = 16.dp)) {
+            // door to door
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    androidx.compose.ui.text.buildAnnotatedString {
+                        append(hhmm(it.start))
+                        withStyle(androidx.compose.ui.text.SpanStyle(color = c.onSurfaceVariant, fontWeight = FontWeight.Normal)) { append(" – ") }
+                        append(hhmm(it.end))
+                    },
+                    Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold,
+                )
+                Text(dur(it.duration), style = MaterialTheme.typography.titleMedium)
             }
-            Spacer(Modifier.height(12.dp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                it.legs.forEach { l ->
-                    if (l.isWalk) {
-                        if (l.duration >= 300) Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(modeIcon(l.mode), stringResource(R.string.mode_walk), Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("${(l.duration + 30) / 60}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
+            val status = when {
+                (arrDelay ?: 0) > 0 -> stringResource(R.string.arrives_late, arrDelay!!) to delayColor(arrDelay)
+                first?.realtime == true -> stringResource(R.string.on_time) to StatusColors.onTime
+                else -> null
+            }
+            Row(Modifier.padding(top = 2.dp)) {
+                Text(transfersText(it.transfers), style = MaterialTheme.typography.bodyMedium, color = c.onSurfaceVariant)
+                status?.let { (t, col) -> Text(", $t", style = MaterialTheme.typography.bodyMedium, color = col) }
+            }
+
+            // the chain: every walk and every ride, in order
+            FlowRow(
+                Modifier.padding(top = 14.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp),
+                itemVerticalAlignment = Alignment.CenterVertically,
+            ) {
+                val parts = it.legs.filter { l -> !l.isWalk || l.duration >= 60 }
+                parts.forEachIndexed { i, l ->
+                    if (i > 0) Box(Modifier.width(10.dp).height(2.dp).background(c.outlineVariant))
+                    if (l.isWalk) Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(modeIcon(l.mode), null, Modifier.size(16.dp), tint = c.onSurfaceVariant)
+                        Text(stringResource(R.string.n_min, (l.duration + 30) / 60), style = MaterialTheme.typography.labelMedium, color = c.onSurfaceVariant)
                     } else LineChip(l.line, l.mode, l.color, l.textColor)
                 }
             }
+
+            // where the first ride leaves, and when
             if (first != null) {
-                Spacer(Modifier.height(10.dp))
+                HorizontalDivider(Modifier.padding(top = 14.dp, bottom = 10.dp), color = c.outlineVariant.copy(alpha = .5f))
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(hhmm(first.from.scheduledDeparture), style = MaterialTheme.typography.labelLarge)
+                    if ((depDelay ?: 0) > 0) Text(" +$depDelay", style = MaterialTheme.typography.labelLarge, color = delayColor(depDelay))
+                    Spacer(Modifier.width(8.dp))
                     Text(
                         first.from.platform?.let { p -> stringResource(R.string.from_stop_platform, first.from.name, p) } ?: stringResource(R.string.from_stop, first.from.name),
-                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium, color = c.onSurfaceVariant,
                         modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis,
                     )
-                    val m = minutesUntil(it.start)
-                    if (m != null && m in 0..90) Text(stringResource(R.string.in_min, m), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    val m = minutesUntil(first.from.departure ?: first.from.scheduledDeparture)
+                    if (m != null && m in 0..90) Text(
+                        modifier = Modifier.padding(start = 10.dp),
+                        text = stringResource(R.string.in_min, m), style = MaterialTheme.typography.labelLarge, color = c.primary)
                 }
             }
             if (cancelled) WarningLine(stringResource(R.string.part_cancelled), error = true)
@@ -521,7 +534,7 @@ private fun WarningLine(text: String, error: Boolean) {
 // Itinerary detail
 // =====================================================================
 
-fun legColor(l: Leg): Color = parseHex(l.color)?.takeIf { it != Color.White } ?: ModeGroup.of(l.mode).color
+fun legColor(l: Leg): Color = (parseHex(l.color)?.takeIf { it != Color.White } ?: ModeGroup.of(l.mode).color).calm()
 
 fun legLine(l: Leg) = MapLine(
     l.geometry?.let { decodePolyline(it.points, it.precision) } ?: listOf(l.from.lat to l.from.lon, l.to.lat to l.to.lon),
@@ -596,6 +609,7 @@ fun ItineraryScreen(nav: Nav) {
     ) { pad ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = pad.calculateTopPadding(), bottom = pad.calculateBottomPadding() + 32.dp)) {
             item { LiveStatusCard(it, updatedAt) }
+            item { Failover(it, nav) }
             item {
                 NaviMap(
                     Modifier.fillMaxWidth().height(240.dp).padding(horizontal = 16.dp).clip(RoundedCornerShape(24.dp)),
@@ -608,6 +622,68 @@ fun ItineraryScreen(nav: Nav) {
                     if (l.isWalk) WalkLeg(l, isTransfer = i > 0 && i < it.legs.lastIndex)
                     else TransitLeg(l, nav)
                 }
+            }
+        }
+    }
+}
+
+/** Where the trip breaks, if it does: a cancelled ride, or a change that live times no longer allow. */
+private data class Break(val keep: Int, val from: Location, val time: ZonedDateTime, val message: String)
+
+@Composable
+private fun findBreak(it: Itinerary): Break? {
+    val now = ZonedDateTime.now()
+    fun place(p: Place) = Location(p.stopId ?: "${p.lat},${p.lon}", if (p.stopId != null) "STOP" else "GPS", p.name, lat = p.lat, lon = p.lon)
+    val idx = it.legs.indices.filter { i -> !it.legs[i].isWalk }
+    for ((n, i) in idx.withIndex()) {
+        val l = it.legs[i]
+        val dep = parseTime(l.from.departure ?: l.from.scheduledDeparture) ?: continue
+        if (dep.isBefore(now.minusMinutes(1)) && !l.cancelled) continue
+        if (l.cancelled || l.from.cancelled || l.to.cancelled) {
+            return Break(i, place(l.from), if (dep.isBefore(now)) now else dep, stringResource(R.string.risk_cancelled, l.line.orEmpty()))
+        }
+        val prev = idx.getOrNull(n - 1)?.let { p -> it.legs[p] } ?: continue
+        val arr = parseTime(prev.to.arrival ?: prev.to.scheduledArrival) ?: continue
+        val walk = it.legs.subList(idx[n - 1] + 1, i).sumOf { w -> w.duration } / 60
+        val buffer = Duration.between(arr, dep).toMinutes() - walk
+        if (buffer < 0) return Break(idx[n - 1] + 1, place(prev.to), arr, stringResource(R.string.risk_missed, prev.to.name, -buffer))
+        if (buffer < 2 && (prev.realtime || l.realtime)) return Break(idx[n - 1] + 1, place(prev.to), arr, stringResource(R.string.risk_tight, prev.to.name, buffer))
+    }
+    return null
+}
+
+/** Automatic plan B: when the trip breaks, search from that point on and offer the result, merged with what's already behind you. */
+@Composable
+private fun Failover(it: Itinerary, nav: Nav) {
+    val br = findBreak(it) ?: return
+    val c = MaterialTheme.colorScheme
+    val last = it.legs.last().to
+    val dest = last.stopId ?: "${last.lat},${last.lon}"
+    var alts by remember(br.from.id, br.keep) { mutableStateOf<List<Itinerary>?>(null) }
+    var failed by remember(br.from.id, br.keep) { mutableStateOf(false) }
+    LaunchedEffect(br.from.id, br.keep) {
+        runCatching { Api.plan(br.from.id, dest, br.time.toOffsetDateTime().toString(), false, JourneyForm.wheelchair, JourneyForm.bike) }
+            .onSuccess { p -> alts = p.itineraries.filter { a -> a.legs.any { l -> !l.isWalk } }.take(3) }
+            .onFailure { failed = true }
+    }
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).clip(RoundedCornerShape(24.dp))
+            .background(c.errorContainer.copy(alpha = .35f)).padding(vertical = 16.dp),
+    ) {
+        Text(br.message, Modifier.padding(horizontal = 18.dp), style = MaterialTheme.typography.titleMedium, color = c.onSurface)
+        Text(stringResource(R.string.alternatives_from, br.from.name), Modifier.padding(start = 18.dp, end = 18.dp, top = 2.dp, bottom = 6.dp), style = MaterialTheme.typography.bodyMedium, color = c.onSurfaceVariant)
+        when {
+            failed -> Text(stringResource(R.string.alternatives_none), Modifier.padding(horizontal = 18.dp), style = MaterialTheme.typography.bodyMedium)
+            alts == null -> Text(stringResource(R.string.alternatives_searching), Modifier.padding(horizontal = 18.dp), style = MaterialTheme.typography.bodyMedium, color = c.onSurfaceVariant)
+            alts!!.isEmpty() -> Text(stringResource(R.string.alternatives_none), Modifier.padding(horizontal = 18.dp), style = MaterialTheme.typography.bodyMedium)
+            else -> alts!!.forEach { a ->
+                val merged = Itinerary(
+                    start = it.start, end = a.end,
+                    duration = (Duration.between(parseTime(it.start) ?: ZonedDateTime.now(), parseTime(a.end) ?: ZonedDateTime.now()).seconds).toInt(),
+                    transfers = (it.legs.take(br.keep) + a.legs).count { l -> !l.isWalk } - 1,
+                    legs = it.legs.take(br.keep) + a.legs,
+                )
+                ItineraryCard(a) { JourneyForm.selected = merged; nav.itinerary() }
             }
         }
     }
@@ -683,13 +759,13 @@ fun LiveStatusCard(it: Itinerary, updatedAt: ZonedDateTime?) {
 /** Fixed colours of the passenger display; it stays dark glass whatever the app theme is. */
 object Display {
     val glass = Color(0xFF161A1F)
-    val amber = Color(0xFFEBBF89)
-    val next = Color(0xFFB0C8EC)
+    val amber = Color(0xFFD6C3A5)
+    val next = Color(0xFFAFBCCF)
     val text = Color(0xFFE2E5EF)
     val dim = Color(0xFFA7ABB4)
     val track = Color(0xFF444850)
-    val live = Color(0xFF8BD8A0)
-    val alarm = Color(0xFFFF9993)
+    val live = Color(0xFF9DC7A8)
+    val alarm = Color(0xFFE8A19B)
 }
 
 /** The trip as one line, walks included: each ride in its line colour, the part already behind you in amber, the next stop as a blue ring. */
@@ -812,13 +888,17 @@ private fun TransitLeg(l: Leg, nav: Nav) {
             Column(Modifier.padding(horizontal = 12.dp)) {
                 StopLine(l.from, departure = true, realtime = l.realtime, nav = nav)
                 Spacer(Modifier.height(10.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    Modifier.clip(RoundedCornerShape(10.dp)).clickable(enabled = l.tripId != null) { l.tripId?.let { TripContext.put(it, l.notes); nav.trip(it, l.from.stopId, l.to.stopId) } },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     LineChip(l.line, l.mode, l.color, l.textColor)
                     Spacer(Modifier.width(8.dp))
                     Text("→ ${l.headsign.orEmpty()}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 l.operator?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 if (l.cancelled) WarningLine(stringResource(R.string.trip_cancelled), error = true)
+                ReasonList(l.notes, Modifier.padding(top = 4.dp))
                 l.alerts.forEach { a ->
                     Text(
                         listOfNotNull(a.header, a.text).distinct().joinToString(": "),
@@ -829,7 +909,7 @@ private fun TransitLeg(l: Leg, nav: Nav) {
                 Row(
                     Modifier.fillMaxWidth().padding(vertical = 6.dp).clip(RoundedCornerShape(8.dp))
                         .clickable(enabled = l.stops.isNotEmpty() || l.tripId != null) {
-                            if (l.stops.isNotEmpty()) expanded = !expanded else l.tripId?.let(nav::trip)
+                            if (l.stops.isNotEmpty()) expanded = !expanded else l.tripId?.let { TripContext.put(it, l.notes); nav.trip(it, l.from.stopId, l.to.stopId) }
                         }.padding(vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -847,6 +927,14 @@ private fun TransitLeg(l: Leg, nav: Nav) {
                         Text(hhmm(s.scheduledDeparture ?: s.scheduledArrival), Modifier.width(52.dp), style = MaterialTheme.typography.bodySmall)
                         Text(s.name, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
+                }
+                if (l.tripId != null) androidx.compose.material3.TextButton(
+                    onClick = { TripContext.put(l.tripId, l.notes); nav.trip(l.tripId, l.from.stopId, l.to.stopId) },
+                    contentPadding = PaddingValues(horizontal = 0.dp),
+                ) {
+                    Icon(Icons.Filled.Map, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.whole_ride))
                 }
                 Spacer(Modifier.height(6.dp))
                 StopLine(l.to, departure = false, realtime = l.realtime, nav = nav)

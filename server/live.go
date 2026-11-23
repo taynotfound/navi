@@ -189,7 +189,9 @@ func (a *App) LiveItinerary(ctx context.Context, it Itinerary) Itinerary {
 				ch <- result{i, l}
 				return
 			}
-			ch <- result{i, RefreshLeg(l, live)}
+			leg := RefreshLeg(l, live)
+			leg.Notes = a.legNotes(ctx, leg)
+			ch <- result{i, leg}
 		}(i, l)
 	}
 	legs := append([]Leg{}, it.Legs...)
@@ -244,3 +246,36 @@ func (a *App) shareGet(ctx context.Context, r *http.Request) (any, error) {
 
 // shareURL is where a shared trip opens: the website's trip page (SHARE_URL + id).
 func (a *App) shareURL(id string) string { return a.shareBase + url.QueryEscape(id) }
+
+// legNotes finds this ride on its departure board and returns DB's messages for it
+// ("Reparatur an einem Signal"). Boards are cached, so this costs no extra upstream calls
+// for people watching the same stop.
+func (a *App) legNotes(ctx context.Context, l Leg) []string {
+	dep, err := time.Parse(time.RFC3339, l.From.ScheduledDeparture)
+	if l.From.StopID == "" || err != nil || time.Until(dep) > 80*time.Minute || time.Since(dep) > 3*time.Hour {
+		return l.Notes
+	}
+	stop := l.From.StopID
+	if a.stations.Get(StationKey(stop)) == nil {
+		if st := a.stations.Nearest(l.From.Lat, l.From.Lon, 400); st != nil {
+			stop = "de-DELFI_" + st.DHID
+		}
+	}
+	res, err := a.board(ctx, url.Values{"stop": {stop}, "time": {dep.Add(-2 * time.Minute).Format(time.RFC3339)}})
+	if err != nil {
+		return l.Notes
+	}
+	b, ok := res.(Board)
+	if !ok {
+		return l.Notes
+	}
+	for _, r := range b.Rows {
+		if (r.TripID != "" && r.TripID == l.TripID) || (r.Line == l.Line && r.ScheduledTime == l.From.ScheduledDeparture) {
+			if len(r.Notes) > 0 {
+				return r.Notes
+			}
+			return l.Notes
+		}
+	}
+	return l.Notes
+}

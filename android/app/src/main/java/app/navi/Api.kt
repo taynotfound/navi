@@ -104,6 +104,7 @@ data class Leg(
     val geometry: Geometry? = null,
     val alerts: List<Alert> = emptyList(),
     val steps: List<Step> = emptyList(),
+    val notes: List<String> = emptyList(),
 ) {
     val isWalk get() = mode == "WALK" || mode == "BIKE" || mode == "CAR"
 }

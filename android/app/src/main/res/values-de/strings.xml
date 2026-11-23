@@ -236,4 +236,18 @@
     <string name="step_stairs">Treppe nehmen</string>
     <string name="step_elevator">Aufzug nehmen</string>
     <string name="step_escalator">Rolltreppe nehmen</string>
+    <string name="n_min">%d Min.</string>
+    <string name="arrives_late">kommt %d Min. später an</string>
+    <string name="whole_ride">Ganze Fahrt mit Karte und allen Halten</string>
+    <string name="vehicle_estimated">Position auf der Karte ist geschätzt</string>
+    <string name="you_board">Hier steigst du ein</string>
+    <string name="you_get_off">Hier steigst du aus</string>
+    <string name="risk_cancelled">%1$s fällt aus.</string>
+    <string name="risk_missed">Der Umstieg in %1$s klappt wohl nicht mehr, dir fehlen %2$d Min.</string>
+    <string name="risk_tight">Der Umstieg in %1$s wird knapp: %2$d Min. zum Umsteigen.</string>
+    <string name="alternatives_from">Andere Wege ab %1$s:</string>
+    <string name="alternatives_searching">Suche Alternativen …</string>
+    <string name="alternatives_none">Gerade nichts Besseres. Dranbleiben oder Personal fragen.</string>
+    <plurals name="more_notices"><item quantity="one">%d weiterer Hinweis</item><item quantity="other">%d weitere Hinweise</item></plurals>
+    <plurals name="hide_notices"><item quantity="one">Hinweis zuklappen</item><item quantity="other">Hinweise zuklappen</item></plurals>
 </resources>

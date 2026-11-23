@@ -202,7 +202,7 @@ fun PlaceRow(loc: Location, icon: androidx.compose.ui.graphics.vector.ImageVecto
             Icon(
                 icon ?: when (loc.type) { "STOP" -> main?.icon ?: Icons.Filled.Place; "ADDRESS" -> Icons.Filled.Home; else -> Icons.Filled.Place },
                 null,
-                tint = if (icon == null && main != null) main.color else MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         },
         modifier = Modifier.clickableRow(onClick),

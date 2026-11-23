@@ -2,34 +2,34 @@
 
 ## The idea
 
-Navi looks like the passenger display above a train door. Dark glass, amber text for what matters right now, and one line with its stops where the next stop has a blue ring. That's the whole system, in the app and on the website.
+Navi looks like the passenger display above a train door. Dark glass, muted sand text for what matters right now, and one line with its stops where the next stop has a blue ring. That's the whole system, in the app and on the website.
 
-The logo is the same thing in small: an N drawn as a route, starting at an amber dot and ending at a blue ring. Source is `brand/logo.svg`.
+The logo is the same thing in small: an N drawn as a route, starting at a sand dot and ending at a blue ring. Source is `brand/logo.svg`.
 
 ## Colours
 
-Generated with Material Color Utilities (TonalSpot, spec 2025). Neutrals come from a blue-graphite seed `#3D6FA8`, the primary from amber `#E9A23B`, and tertiary is the blue seed's primary. Everything is low chroma so nothing glares at night.
+Neutrals come from Material Color Utilities (TonalSpot, blue-graphite seed `#3D6FA8`). The accents are hand-tuned and deliberately dull: sand instead of LED amber, a dusty blue for "next". Nothing glares at night.
 
 Dark (default):
 - ground `#0c0e12`, panels `#111418` / `#161a1f` / `#1c2026`, text `#e2e5ef` and `#a7abb4`
-- amber `#ebbf89` on `#573a10`: the main button, "now" text, the part of a trip behind you
-- blue `#b0c8ec`: the next stop, focus rings
-- on time `#8bd8a0`, late `#f5a06e`, very late or cancelled `#ff9993`, always with text next to it
+- sand `#d6c3a5` on `#3a2e1c`: the main button, "now" text, the part of a trip behind you
+- blue `#afbccf`: the next stop, focus rings
+- on time `#9dc7a8`, late `#ddad8a`, very late or cancelled `#e8a19b`, always with text next to it
 
-Light is optional (button on the site, setting in the app): ground `#f9f9fe`, amber turns `#7f571e`, blue `#406189`.
+Light is optional (button on the site, setting in the app): ground `#f9f9fe`, sand turns `#6b5a40`, blue `#4e5d72`.
 
 The display card (live status in the app, the board and trip status on the site) stays dark glass `#161a1f` in light mode too, like the real thing.
 
-Line colours: long distance `#b0283a`, regional `#5b4ba8`, S-Bahn `#2e7d32`, U-Bahn `#1565c0`, tram `#c2410c`, bus `#7b1fa2`. If the operator has its own colour, that one wins.
+Line colours: long distance `#8e3b45`, regional `#5a5290`, S-Bahn `#3f6e47`, U-Bahn `#3d5f8c`, tram `#9a5a36`, bus `#6e4a85`. If the operator has its own colour, that one wins, but it gets damped first (saturation capped, kept dark enough for white text) so a list of chips doesn't shout.
 
 ## Type
 
-Atkinson Hyperlegible Next everywhere, made by the Braille Institute for people who struggle to read. Which is everybody at a stop in the rain. Tabular numbers for times. The zero is slashed; that's the font, not a bug. Self-hosted (`site/fonts/`, `android/app/src/main/res/font/`), OFL.
+Google Sans Flex everywhere, the typeface Material 3 Expressive is built around (OFL since 2025). Round and calm, with clear numbers, which matters in an app that is mostly times. Proportional numbers: tabular ones leave gaps around every 1. Self-hosted (`site/fonts/`, `android/app/src/main/res/font/`).
 
 ## Route strips
 
 The one recurring shape. A 5 px track, 23 px dots with a 4 px ring.
-- passed: filled amber
+- passed: filled sand
 - next: blue ring, slightly bigger
 - later: grey ring
 - rides tint the track in their line colour, walks stay grey
@@ -38,7 +38,7 @@ Used for the trip status in the app and on the shared trip page, the stop picker
 
 ## Shapes and motion
 
-Material 3 Expressive in the app (MotionScheme.expressive, button shape morphs). Panels have 28 px corners. On the site buttons squash a bit on press, board rows slide up 8 px when they load, the strip's amber fill slides to the chosen stop. Reduced motion turns all of it off.
+Material 3 Expressive in the app (MotionScheme.expressive, button shape morphs). Panels have 28 px corners. On the site buttons squash a bit on press, board rows slide up 8 px when they load, the strip's sand fill slides to the chosen stop. Reduced motion turns all of it off.
 
 ## Files
 

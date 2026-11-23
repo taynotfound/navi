@@ -29,34 +29,33 @@ import androidx.compose.ui.unit.sp
 import app.navi.R
 import app.navi.Store
 
-// Generated with Material Color Utilities (SchemeTonalSpot, spec 2025). Neutrals and secondary come from
-// a blue-graphite seed #3D6FA8 (the glass of a train's passenger display), primary from amber #E9A23B
-// (the old LED text), tertiary is the blue seed's primary and marks "next". Low chroma, nothing glares.
+// Neutrals from Material Color Utilities (TonalSpot, blue-graphite seed #3D6FA8). Primary is a muted sand
+// (old LED amber, turned way down), tertiary a dusty blue that marks "next". Kept low chroma on purpose.
 private val Dark = darkColorScheme(
-    primary = Color(0xFFEBBF89),
-    onPrimary = Color(0xFF573A10),
-    primaryContainer = Color(0xFF6C4C21),
-    onPrimaryContainer = Color(0xFFFFDEB8),
-    inversePrimary = Color(0xFF7A592C),
+    primary = Color(0xFFD6C3A5),
+    onPrimary = Color(0xFF3A2E1C),
+    primaryContainer = Color(0xFF4A4030),
+    onPrimaryContainer = Color(0xFFEFE2CC),
+    inversePrimary = Color(0xFF6B5A40),
     secondary = Color(0xFFBBC7DB),
     onSecondary = Color(0xFF354151),
-    secondaryContainer = Color(0xFF313C4C),
+    secondaryContainer = Color(0xFF2C323B),
     onSecondaryContainer = Color(0xFFB4C0D4),
-    tertiary = Color(0xFFB0C8EC),
-    onTertiary = Color(0xFF2A415F),
-    tertiaryContainer = Color(0xFF3C5472),
-    onTertiaryContainer = Color(0xFFD4E4FF),
-    error = Color(0xFFFA746F),
+    tertiary = Color(0xFFAFBCCF),
+    onTertiary = Color(0xFF26313F),
+    tertiaryContainer = Color(0xFF384352),
+    onTertiaryContainer = Color(0xFFD5DEEA),
+    error = Color(0xFFE59A95),
     onError = Color(0xFF490006),
-    errorContainer = Color(0xFF871F21),
-    onErrorContainer = Color(0xFFFF9993),
+    errorContainer = Color(0xFF5E2B2A),
+    onErrorContainer = Color(0xFFF2C9C5),
     background = Color(0xFF0C0E12),
     onBackground = Color(0xFFE2E5EF),
     surface = Color(0xFF0C0E12),
     onSurface = Color(0xFFE2E5EF),
     surfaceVariant = Color(0xFF21262D),
     onSurfaceVariant = Color(0xFFA7ABB4),
-    surfaceTint = Color(0xFFEBBF89),
+    surfaceTint = Color(0xFFD6C3A5),
     surfaceDim = Color(0xFF0C0E12),
     surfaceBright = Color(0xFF282C34),
     surfaceContainerLowest = Color(0xFF000000),
@@ -72,30 +71,30 @@ private val Dark = darkColorScheme(
 )
 
 private val Light = lightColorScheme(
-    primary = Color(0xFF7F571E),
+    primary = Color(0xFF6B5A40),
     onPrimary = Color(0xFFFFF7F3),
-    primaryContainer = Color(0xFFFEC884),
-    onPrimaryContainer = Color(0xFF644006),
-    inversePrimary = Color(0xFFFEC884),
+    primaryContainer = Color(0xFFEDE2CF),
+    onPrimaryContainer = Color(0xFF3F3322),
+    inversePrimary = Color(0xFFD6C3A5),
     secondary = Color(0xFF546071),
     onSecondary = Color(0xFFF8F8FF),
-    secondaryContainer = Color(0xFFD7E3F8),
+    secondaryContainer = Color(0xFFE0E4EB),
     onSecondaryContainer = Color(0xFF475263),
-    tertiary = Color(0xFF406189),
+    tertiary = Color(0xFF4E5D72),
     onTertiary = Color(0xFFF8F8FF),
-    tertiaryContainer = Color(0xFFA3C3F1),
-    onTertiaryContainer = Color(0xFF1A3E64),
-    error = Color(0xFFA83836),
+    tertiaryContainer = Color(0xFFD9E0EA),
+    onTertiaryContainer = Color(0xFF283445),
+    error = Color(0xFF9A4440),
     onError = Color(0xFFFFF7F6),
-    errorContainer = Color(0xFFFA746F),
-    onErrorContainer = Color(0xFF6E0A12),
+    errorContainer = Color(0xFFF0D2CF),
+    onErrorContainer = Color(0xFF5A1F1C),
     background = Color(0xFFF9F9FE),
     onBackground = Color(0xFF2E333A),
     surface = Color(0xFFF9F9FE),
     onSurface = Color(0xFF2E333A),
     surfaceVariant = Color(0xFFDFE2EC),
     onSurfaceVariant = Color(0xFF5B5F67),
-    surfaceTint = Color(0xFF7F571E),
+    surfaceTint = Color(0xFF6B5A40),
     surfaceDim = Color(0xFFD6DAE4),
     surfaceBright = Color(0xFFF9F9FE),
     surfaceContainerLowest = Color(0xFFFFFFFF),
@@ -140,24 +139,24 @@ fun NaviTheme(content: @Composable () -> Unit) {
     )
 }
 
-/** Atkinson Hyperlegible Next everywhere: made for people who struggle to read, which is everyone at a stop in the rain. */
-val Atkinson = FontFamily(
-    Font(R.font.atkinson_400, FontWeight.Normal),
-    Font(R.font.atkinson_500, FontWeight.Medium),
-    Font(R.font.atkinson_700, FontWeight.SemiBold),
-    Font(R.font.atkinson_700, FontWeight.Bold),
-    Font(R.font.atkinson_800, FontWeight.ExtraBold),
+/** Google Sans Flex: Material 3 Expressive's own typeface (OFL). Round, calm, with clear numbers. */
+val AppFont = FontFamily(
+    Font(R.font.gsans_400, FontWeight.Normal),
+    Font(R.font.gsans_500, FontWeight.Medium),
+    Font(R.font.gsans_600, FontWeight.SemiBold),
+    Font(R.font.gsans_700, FontWeight.Bold),
+    Font(R.font.gsans_700, FontWeight.ExtraBold),
 )
 
 private fun expressiveType(): Typography {
     val t = Typography()
-    fun TextStyle.a(w: FontWeight? = null, ls: Float? = null) = copy(fontFamily = Atkinson, fontWeight = w ?: fontWeight, letterSpacing = ls?.sp ?: letterSpacing)
+    fun TextStyle.a(w: FontWeight? = null, ls: Float? = null) = copy(fontFamily = AppFont, fontWeight = w ?: fontWeight, letterSpacing = ls?.sp ?: letterSpacing)
     return Typography(
-        displayLarge = t.displayLarge.a(FontWeight.ExtraBold, -0.5f),
-        displayMedium = t.displayMedium.a(FontWeight.ExtraBold, -0.5f),
-        displaySmall = t.displaySmall.a(FontWeight.ExtraBold, -0.25f),
-        headlineLarge = t.headlineLarge.a(FontWeight.ExtraBold, -0.25f),
-        headlineMedium = t.headlineMedium.a(FontWeight.ExtraBold, -0.25f),
+        displayLarge = t.displayLarge.a(FontWeight.Bold, -0.25f),
+        displayMedium = t.displayMedium.a(FontWeight.Bold, -0.25f),
+        displaySmall = t.displaySmall.a(FontWeight.Bold, 0f),
+        headlineLarge = t.headlineLarge.a(FontWeight.Bold, 0f),
+        headlineMedium = t.headlineMedium.a(FontWeight.Bold, 0f),
         headlineSmall = t.headlineSmall.a(FontWeight.Bold),
         titleLarge = t.titleLarge.a(FontWeight.Bold),
         titleMedium = t.titleMedium.a(FontWeight.SemiBold),
@@ -177,7 +176,16 @@ val darkScheme: Boolean
 
 /** Status colours that stay readable in light and dark mode, independent of the wallpaper palette. */
 object StatusColors {
-    val onTime @Composable @ReadOnlyComposable get() = if (darkScheme) Color(0xFF8BD8A0) else Color(0xFF1B7A3A)
-    val late @Composable @ReadOnlyComposable get() = if (darkScheme) Color(0xFFF5A06E) else Color(0xFF9C4A14)
-    val veryLate @Composable @ReadOnlyComposable get() = if (darkScheme) Color(0xFFFFA49A) else Color(0xFFC62828)
+    val onTime @Composable @ReadOnlyComposable get() = if (darkScheme) Color(0xFF9DC7A8) else Color(0xFF2F6B40)
+    val late @Composable @ReadOnlyComposable get() = if (darkScheme) Color(0xFFDDAD8A) else Color(0xFF8A4E22)
+    val veryLate @Composable @ReadOnlyComposable get() = if (darkScheme) Color(0xFFE8A19B) else Color(0xFFA33A33)
+}
+
+/** Operator colours are often pure signal colours; take the edge off so a list of chips doesn't shout. */
+fun Color.calm(): Color {
+    val hsv = FloatArray(3)
+    android.graphics.Color.colorToHSV(android.graphics.Color.rgb((red * 255).toInt(), (green * 255).toInt(), (blue * 255).toInt()), hsv)
+    hsv[1] = hsv[1].coerceAtMost(0.5f) * 0.85f
+    hsv[2] = hsv[2].coerceIn(0.35f, 0.52f)
+    return Color(android.graphics.Color.HSVToColor(hsv))
 }

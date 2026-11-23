@@ -13,22 +13,22 @@
 <link rel="icon" href="logo.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.png" sizes="64x64">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="preload" href="fonts/atkinson-next.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/google-sans-flex.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="style.css">
 <style>
   .hero { padding: 48px 0 40px; }
-  .hero h1 { margin: 0; max-width: 15ch; font-size: clamp(40px, 6.4vw, 76px); line-height: 1.02; font-weight: 800; letter-spacing: -.025em; text-wrap: balance; }
+  .hero h1 { margin: 0; max-width: 15ch; font-size: clamp(40px, 6.4vw, 76px); line-height: 1.02; font-weight: 700; letter-spacing: -.01em; text-wrap: balance; }
   .hero p { margin: 20px 0 0; max-width: 44ch; font-size: 21px; color: var(--ink-2); }
   .get { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 32px; }
   .get .soon { color: var(--ink-2); font-size: 15px; margin-left: 6px; }
 
   .head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 26px; }
-  .head h2 { margin: 0; font-size: clamp(28px, 4vw, 40px); line-height: 1.1; font-weight: 800; letter-spacing: -.015em; color: #ebbf89; }
+  .head h2 { margin: 0; font-size: clamp(28px, 4vw, 40px); line-height: 1.1; font-weight: 700; letter-spacing: -.015em; color: #d6c3a5; }
   .head .clock { margin-left: auto; font-size: 22px; font-weight: 700; color: var(--glass-dim); }
   #board { min-height: 380px; }
 
   .letter { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 56px; margin-top: 96px; }
-  .letter h2 { margin: 0; font-size: clamp(30px, 4vw, 44px); line-height: 1.08; font-weight: 800; letter-spacing: -.02em; }
+  .letter h2 { margin: 0; font-size: clamp(30px, 4vw, 44px); line-height: 1.08; font-weight: 700; letter-spacing: -.02em; }
   .letter .intro p { max-width: 40ch; color: var(--ink-2); }
   .letter .intro p:first-of-type { margin-top: 18px; }
   .sig { color: var(--ink) !important; font-weight: 700; }
@@ -167,6 +167,12 @@ function applyLang() {
 
 const MODE = { HIGHSPEED_RAIL: "m-long", LONG_DISTANCE: "m-long", NIGHT_RAIL: "m-long", REGIONAL_FAST_RAIL: "m-reg", REGIONAL_RAIL: "m-reg", RAIL: "m-reg",
   SUBURBAN: "m-s", SUBWAY: "m-u", METRO: "m-u", TRAM: "m-tram", BUS: "m-bus", COACH: "m-bus", FERRY: "m-ferry" };
+// operator colours are often pure signal colours; take the edge off like the app does
+const calm = hex => { const n = parseInt(hex, 16), r = (n >> 16) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+  const h = d === 0 ? 0 : mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  return `hsl(${Math.round(h * 60)} ${Math.round(Math.min(s, .45) * 100)}% ${Math.round(Math.min(Math.max(l, .3), .42) * 100)}%)`; };
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const hhmm = s => s ? new Date(s).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "";
 const clock = () => document.getElementById("clock").textContent = hhmm(new Date().toISOString());
@@ -188,9 +194,10 @@ function row(r, i) {
   const late = r.delay != null && r.delay > 0;
   const status = r.cancelled ? `<small class="bad">${T("cancelled")}</small>`
     : r.delay == null ? "" : late ? `<small class="${r.delay < 5 ? "late" : "bad"}">+${r.delay}</small>` : `<small class="ok">${T("onTime")}</small>`;
-  const color = r.color && /^[0-9a-f]{6}$/i.test(r.color) && r.color.toLowerCase() !== "ffffff" ? ` style="background:#${r.color}"` : "";
+  const color = r.color && /^[0-9a-f]{6}$/i.test(r.color) && r.color.toLowerCase() !== "ffffff" ? ` style="background:${calm(r.color)}"` : "";
   const changed = r.platform && r.scheduledPlatform && r.platform !== r.scheduledPlatform;
-  const via = r.via && r.via.length ? `<small>${T("via")} ${esc(r.via.slice(0, 3).join(", "))}</small>` : "";
+  const why = (r.notes || []).filter(n => n.length <= 120).sort((a, b) => a.length - b.length)[0];
+  const via = (r.via && r.via.length ? `<small>${T("via")} ${esc(r.via.slice(0, 3).join(", "))}</small>` : "") + (why ? `<small class="why">${esc(why)}</small>` : "");
   return `<li class="dep${r.cancelled ? " cancelled" : ""}" style="--i:${i}">
     <span class="t">${hhmm(r.scheduledTime)}${status}</span>
     <span class="ln ${MODE[r.mode] || ""}"${color}>${esc(r.line)}</span>

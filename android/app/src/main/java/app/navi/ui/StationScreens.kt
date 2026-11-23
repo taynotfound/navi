@@ -1,5 +1,11 @@
 package app.navi.ui
 
+import app.navi.Place
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.Canvas
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -224,7 +230,7 @@ fun BoardScreen(stop: Location, nav: Nav) {
                     else -> {
                         if (b.error != null) item { Text(stringResource(R.string.refresh_failed), Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                         items(shown, key = { it.source + it.id + it.scheduledTime + it.line }) { r ->
-                            DepartureRow(r, arrivals) { r.tripId?.let(nav::trip) }
+                            DepartureRow(r, arrivals) { r.tripId?.let { TripContext.put(it, r.notes, r.attributes); nav.trip(it) } }
                             HorizontalDivider(Modifier.padding(start = 84.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh)
                         }
                         item {
@@ -262,7 +268,7 @@ private fun DepartureRow(r: BoardRow, arrivals: Boolean, onClick: () -> Unit) {
                 maxLines = 2, overflow = TextOverflow.Ellipsis,
             )
             if (r.via.isNotEmpty()) Text(stringResource(R.string.via, r.via.joinToString(", ")), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            r.notes.firstOrNull()?.let {
+            r.notes.minByOrNull { it.length }?.let {
                 Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.Top) {
                     Icon(Icons.Filled.Warning, null, Modifier.size(14.dp).padding(top = 2.dp), tint = MaterialTheme.colorScheme.tertiary)
                     Spacer(Modifier.width(4.dp))
@@ -281,7 +287,7 @@ private fun DepartureRow(r: BoardRow, arrivals: Boolean, onClick: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TripScreen(id: String, nav: Nav) {
+fun TripScreen(id: String, nav: Nav, on: String? = null, off: String? = null) {
     val trip = rememberLoad(id) { Api.trip(id) }
     val t = trip.value
     Scaffold(
@@ -306,36 +312,95 @@ fun TripScreen(id: String, nav: Nav) {
             l == null -> Box(Modifier.padding(pad)) { ErrorState(t.error ?: stringResource(R.string.trip_not_found), trip.reload) }
             else -> {
                 val all = listOf(l.from) + l.stops + listOf(l.to)
-                val now = ZonedDateTime.now()
-                val nextIdx = all.indexOfFirst { (parseTime(it.departure ?: it.arrival) ?: now) >= now }
+                var now by remember { mutableStateOf(ZonedDateTime.now()) }
+                // live: refetch every 30 s, move the "now" marker every 15 s
+                LaunchedEffect(id) { while (true) { kotlinx.coroutines.delay(30_000); trip.reload() } }
+                LaunchedEffect(id) { while (true) { kotlinx.coroutines.delay(15_000); now = ZonedDateTime.now() } }
+                fun dep(p: Place) = parseTime(p.departure ?: p.scheduledDeparture ?: p.arrival ?: p.scheduledArrival)
+                fun arr(p: Place) = parseTime(p.arrival ?: p.scheduledArrival ?: p.departure ?: p.scheduledDeparture)
+                val nextIdx = all.indexOfFirst { (arr(it) ?: now) > now }
+                val lineColor = legColor(l)
                 val line = remember(l) { legLine(l) }
-                val pts = remember(l) { all.map { MapPoint(it.stopId ?: it.name, it.lat, it.lon, legColor(l), null, 5f) } }
+                // estimated vehicle position: between the last stop it left and the next one, by time
+                val vehicle = if (nextIdx > 0) {
+                    val a = all[nextIdx - 1]; val b = all[nextIdx]
+                    val t0 = dep(a); val t1 = arr(b)
+                    if (t0 != null && t1 != null && now.isAfter(t0)) {
+                        val f = (java.time.Duration.between(t0, now).seconds.toDouble() / java.time.Duration.between(t0, t1).seconds.coerceAtLeast(1)).coerceIn(0.0, 1.0)
+                        MapPoint("vehicle", a.lat + (b.lat - a.lat) * f, a.lon + (b.lon - a.lon) * f, Display.amber, null, 9f)
+                    } else null
+                } else null
+                val pts = all.map { MapPoint(it.stopId ?: it.name, it.lat, it.lon, lineColor, null, 5f) } + listOfNotNull(vehicle)
+                val c = MaterialTheme.colorScheme
+                // your part of the ride, when opened from a journey; stops outside it are dimmed
+                val onIdx = on?.let { s -> all.indexOfFirst { it.stopId == s } }?.takeIf { it >= 0 }
+                val offIdx = off?.let { s -> all.indexOfLast { it.stopId == s } }?.takeIf { it >= 0 && it > (onIdx ?: -1) }
+                fun outside(i: Int) = (onIdx != null && i < onIdx) || (offIdx != null && i > offIdx)
                 LazyColumn(Modifier.padding(pad).fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
                     item {
                         NaviMap(
-                            Modifier.fillMaxWidth().height(240.dp).padding(horizontal = 16.dp).clip(RoundedCornerShape(24.dp)),
+                            Modifier.fillMaxWidth().height(260.dp).padding(horizontal = 16.dp).clip(RoundedCornerShape(24.dp)),
                             lines = listOf(line), points = pts, camera = remember(l) { MapCamera(line.points) }, showMyLocation = true,
                             onPointClick = { pid -> all.firstOrNull { (it.stopId ?: it.name) == pid }?.let { p -> p.stopId?.let { s -> nav.board(Location(s, "STOP", p.name, lat = p.lat, lon = p.lon)) } } },
                         )
-                        l.operator?.let { Text(it, Modifier.padding(horizontal = 20.dp, vertical = 8.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                        Text(
+                            listOfNotNull(
+                                l.operator,
+                                dur(l.duration),
+                                androidx.compose.ui.res.pluralStringResource(R.plurals.stops, all.size, all.size),
+                                if (vehicle != null) stringResource(R.string.vehicle_estimated) else null,
+                            ).joinToString(", "),
+                            Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 8.dp),
+                            style = MaterialTheme.typography.bodySmall, color = c.onSurfaceVariant,
+                        )
+                    }
+                    item {
+                        val (notes, attrs) = remember(id) { TripContext.take(id) }
+                        val all2 = (notes + l.notes + l.alerts.map { a -> listOfNotNull(a.header, a.text).distinct().joinToString(": ") }).distinct()
+                        if (all2.isNotEmpty() || attrs.isNotEmpty()) Column(Modifier.padding(horizontal = 20.dp, vertical = 4.dp)) {
+                            ReasonList(all2)
+                            if (attrs.isNotEmpty()) Text(attrs.joinToString(", "), Modifier.padding(top = 6.dp), style = MaterialTheme.typography.bodySmall, color = c.onSurfaceVariant)
+                        }
                     }
                     items(all.size) { i ->
                         val p = all[i]
-                        val past = nextIdx != -1 && i < nextIdx || nextIdx == -1
-                        val sched = p.scheduledDeparture ?: p.scheduledArrival
-                        val actual = p.departure ?: p.arrival
+                        val passed = nextIdx == -1 || i < nextIdx
+                        val sched = if (i == 0) p.scheduledDeparture else p.scheduledArrival ?: p.scheduledDeparture
+                        val actual = if (i == 0) p.departure else p.arrival ?: p.departure
                         Row(
-                            Modifier.fillMaxWidth().alpha(if (past) 0.5f else 1f)
+                            Modifier.fillMaxWidth().height(IntrinsicSize.Min).alpha(if (outside(i)) .45f else 1f)
                                 .clickable(enabled = p.stopId != null) { nav.board(Location(p.stopId!!, "STOP", p.name, lat = p.lat, lon = p.lon)) }
-                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                                .padding(horizontal = 16.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            TimeColumn(sched, actual, delayOf(actual, sched, l.realtime), p.cancelled, Modifier.width(60.dp), big = false)
-                            Box(Modifier.size(14.dp).clip(CircleShape).background(if (i == nextIdx) MaterialTheme.colorScheme.primary else legColor(l)))
+                            TimeColumn(sched, actual, delayOf(actual, sched, l.realtime), p.cancelled, Modifier.width(60.dp).padding(vertical = 10.dp), big = false)
+                            // the line itself: amber behind you, line colour ahead, next stop as a ring
+                            Canvas(Modifier.width(24.dp).fillMaxHeight()) {
+                                val x = size.width / 2; val y = size.height / 2; val w = 5.dp.toPx(); val r = 8.dp.toPx()
+                                val ahead = lineColor
+                                // segment k -> k+1 is behind you once k+1 is passed, or while you're on it
+                                fun done(k: Int) = nextIdx == -1 || k + 1 < nextIdx || (k + 1 == nextIdx && vehicle != null)
+                                if (i > 0) drawLine(if (done(i - 1)) Display.amber else ahead, Offset(x, 0f), Offset(x, y), w)
+                                if (i < all.lastIndex) drawLine(if (done(i)) Display.amber else ahead, Offset(x, y), Offset(x, size.height), w)
+                                when {
+                                    passed -> drawCircle(Display.amber, r, Offset(x, y))
+                                    i == nextIdx -> { drawCircle(c.surface, r + 1.dp.toPx(), Offset(x, y)); drawCircle(c.tertiary, r, Offset(x, y), style = Stroke(3.5.dp.toPx())) }
+                                    else -> { drawCircle(c.surface, r, Offset(x, y)); drawCircle(ahead, r - 1.dp.toPx(), Offset(x, y), style = Stroke(3.dp.toPx())) }
+                                }
+                            }
                             Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(p.name, style = MaterialTheme.typography.bodyLarge, fontWeight = if (i == 0 || i == all.lastIndex || i == nextIdx) FontWeight.SemiBold else FontWeight.Normal)
-                                if (i == nextIdx) Text(stringResource(R.string.next_stop), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                            Column(Modifier.weight(1f).padding(vertical = 10.dp)) {
+                                Text(
+                                    p.name, style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = if (i == 0 || i == all.lastIndex || i == nextIdx || i == onIdx || i == offIdx) FontWeight.SemiBold else FontWeight.Normal,
+                                    color = if (passed) c.onSurfaceVariant else c.onSurface,
+                                )
+                                val tag = listOfNotNull(
+                                    if (i == onIdx) stringResource(R.string.you_board) else null,
+                                    if (i == offIdx) stringResource(R.string.you_get_off) else null,
+                                    if (i == nextIdx) stringResource(R.string.next_stop) else null,
+                                ).joinToString(", ")
+                                if (tag.isNotEmpty()) Text(tag, style = MaterialTheme.typography.labelMedium, color = if (i == nextIdx) c.tertiary else c.primary)
                             }
                             PlatformBadge(p.platform, p.scheduledPlatform)
                         }
@@ -593,7 +658,7 @@ private fun StopSheet(stop: Location, nav: Nav, close: () -> Unit) {
             b.data == null && b.loading -> LoadingState()
             b.data == null -> ErrorState(b.error ?: "", board.reload)
             b.data.rows.isEmpty() -> Text(stringResource(R.string.no_departures_now), Modifier.padding(20.dp))
-            else -> b.data.rows.take(5).forEach { r -> DepartureRow(r, false) { r.tripId?.let { close(); nav.trip(it) } } }
+            else -> b.data.rows.take(5).forEach { r -> DepartureRow(r, false) { r.tripId?.let { TripContext.put(it, r.notes, r.attributes); close(); nav.trip(it) } } }
         }
     }
 }

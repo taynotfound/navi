@@ -1,10 +1,5 @@
-/* Navi: the passenger display above the train door. Dark glass, amber text, a blue ring for "next". */
-@font-face {
-  font-family: "Atkinson";
-  src: url("fonts/atkinson-next.woff2") format("woff2");
-  font-weight: 200 800;
-  font-display: swap;
-}
+@font-face { font-family: "Google Sans Flex"; src: url("fonts/google-sans-flex.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+/* Navi: the passenger display above the train door. Dark glass, sand-coloured text, a blue ring for "next". */
 
 :root {
   --ground: #0c0e12;
@@ -13,19 +8,19 @@
   --line: #2a2f37;
   --ink: #e2e5ef;
   --ink-2: #a7abb4;
-  --amber: #ebbf89;
-  --on-amber: #3d2706;
-  --next: #b0c8ec;
-  --ok: #8bd8a0;
-  --late: #f5a06e;
-  --bad: #ff9993;
+  --amber: #d6c3a5;
+  --on-amber: #3a2e1c;
+  --next: #afbccf;
+  --ok: #9dc7a8;
+  --late: #ddad8a;
+  --bad: #e8a19b;
   /* the display itself never changes with the theme, like the real one */
   --glass: #161a1f;
   --glass-edge: #262b33;
   --glass-ink: #e2e5ef;
   --glass-dim: #a7abb4;
   --track: #444850;
-  --font: "Atkinson", system-ui, sans-serif;
+  --font: "Google Sans Flex", system-ui, sans-serif;
   color-scheme: dark;
 }
 :root[data-theme="light"] {
@@ -35,12 +30,12 @@
   --line: #d6dae4;
   --ink: #2e333a;
   --ink-2: #5b5f67;
-  --amber: #7f571e;
+  --amber: #6b5a40;
   --on-amber: #fff7f3;
-  --next: #406189;
-  --ok: #1b7a3a;
-  --late: #9c4a14;
-  --bad: #b3261e;
+  --next: #4e5d72;
+  --ok: #2f6b40;
+  --late: #8a4e22;
+  --bad: #a33a33;
   color-scheme: light;
 }
 
@@ -51,7 +46,6 @@ body {
   background: var(--ground);
   color: var(--ink);
   font: 400 18px/1.55 var(--font);
-  font-variant-numeric: tabular-nums;
 }
 ::selection { background: var(--amber); color: var(--on-amber); }
 a { color: inherit; text-underline-offset: .2em; text-decoration-thickness: 1.5px; }
@@ -64,7 +58,7 @@ html { scrollbar-color: var(--track) var(--ground); }
 
 /* top bar */
 .top { display: flex; align-items: center; gap: 12px; padding: 20px 0; }
-.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; font-weight: 800; font-size: 22px; margin-right: auto; }
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; font-weight: 700; font-size: 22px; margin-right: auto; }
 .brand img { width: 40px; height: 40px; }
 .icon-btn, .text-btn {
   display: inline-grid; place-items: center; height: 40px; min-width: 40px; padding: 0 12px;
@@ -97,20 +91,20 @@ html { scrollbar-color: var(--track) var(--ground); }
   box-shadow: 0 20px 50px -20px rgb(0 0 0 / .55);
 }
 @media (max-width: 600px) { .display { padding: 22px 18px 18px; border-radius: 24px; } }
-.amber { color: #ebbf89; }
+.amber { color: #d6c3a5; }
 .dim { color: var(--glass-dim); }
 
 /* the horizontal route strip: stops as dots, the selected/next one as a blue ring */
 .strip-wrap { position: relative; }
 .strip { position: relative; display: flex; justify-content: space-between; list-style: none; margin: 0; padding: 0; }
 .strip::before { content: ""; position: absolute; left: 9px; right: 9px; top: 9px; height: 5px; border-radius: 3px; background: var(--track); }
-.strip-wrap .fill { position: absolute; z-index: 0; left: 9px; top: 9px; height: 5px; border-radius: 3px; background: #ebbf89; transition: width .5s cubic-bezier(.2,.8,.2,1); }
+.strip-wrap .fill { position: absolute; z-index: 0; left: 9px; top: 9px; height: 5px; border-radius: 3px; background: #d6c3a5; transition: width .5s cubic-bezier(.2,.8,.2,1); }
 .strip li { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 0; }
 .strip li:first-child { align-items: flex-start; }
 .strip li:last-child { align-items: flex-end; }
 .dot { width: 23px; height: 23px; border-radius: 50%; background: var(--glass); border: 4px solid var(--track); transition: border-color .2s, background .2s, transform .25s cubic-bezier(.2,.9,.3,1.4); }
-.dot.passed { background: #ebbf89; border-color: #ebbf89; }
-.dot.next { border-color: #b0c8ec; transform: scale(1.18); }
+.dot.passed { background: #d6c3a5; border-color: #d6c3a5; }
+.dot.next { border-color: #afbccf; transform: scale(1.18); }
 .strip button {
   all: unset; cursor: pointer; display: flex; flex-direction: column; align-items: inherit; gap: 10px;
   font: 700 15px/1.2 var(--font); color: var(--glass-dim); text-align: center; border-radius: 8px;
@@ -119,10 +113,10 @@ html { scrollbar-color: var(--track) var(--ground); }
 .strip li:last-child button { text-align: right; }
 .strip button:hover { color: var(--glass-ink); }
 @media (max-width: 600px) { .strip button { font-size: 13px; max-width: 76px; } }
-.strip button:hover .dot { border-color: #b0c8ec; }
-.strip button[aria-pressed="true"] { color: #b0c8ec; }
-.strip button[aria-pressed="true"] .dot { border-color: #b0c8ec; transform: scale(1.18); }
-.strip button:focus-visible { outline: 3px solid #b0c8ec; outline-offset: 4px; }
+.strip button:hover .dot { border-color: #afbccf; }
+.strip button[aria-pressed="true"] { color: #afbccf; }
+.strip button[aria-pressed="true"] .dot { border-color: #afbccf; transform: scale(1.18); }
+.strip button:focus-visible { outline: 3px solid #afbccf; outline-offset: 4px; }
 
 /* departure rows */
 .board { list-style: none; margin: 18px 0 0; padding: 0; }
@@ -132,15 +126,16 @@ html { scrollbar-color: var(--track) var(--ground); }
   animation: in .45s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 40ms);
 }
 @keyframes in { from { transform: translateY(8px); } }
-.dep .t { font-weight: 800; font-size: 20px; color: #ebbf89; line-height: 1.1; }
+.dep .t { font-weight: 700; font-size: 20px; color: #d6c3a5; line-height: 1.1; }
 .dep .t small { display: block; font-size: 13px; font-weight: 700; margin-top: 3px; }
-.ok { color: #8bd8a0; } .late { color: #f5a06e; } .bad { color: #ff9993; }
-.ln { justify-self: start; padding: 5px 9px; border-radius: 8px; font-weight: 800; font-size: 15px; line-height: 1.1; color: #fff; background: #546e7a; white-space: nowrap; max-width: 84px; overflow: hidden; text-overflow: ellipsis; }
+.ok { color: #9dc7a8; } .late { color: #ddad8a; } .bad { color: #e8a19b; }
+.ln { justify-self: start; padding: 5px 9px; border-radius: 8px; font-weight: 700; font-size: 15px; line-height: 1.1; color: #fff; background: #56656d; white-space: nowrap; max-width: 84px; overflow: hidden; text-overflow: ellipsis; }
 .dep .to { font-weight: 700; font-size: 18px; line-height: 1.25; min-width: 0; overflow-wrap: anywhere; }
+.dep .to small.why { color: #ddad8a; }
 .dep .to small { display: block; font-weight: 400; font-size: 14px; color: var(--glass-dim); }
-.dep .pl { font-weight: 800; font-size: 16px; min-width: 34px; text-align: center; padding: 5px 7px; border-radius: 8px; background: #21262d; }
+.dep .pl { font-weight: 700; font-size: 16px; min-width: 34px; text-align: center; padding: 5px 7px; border-radius: 8px; background: #21262d; }
 .dep .pl:empty { visibility: hidden; }
-.dep .pl.changed { background: #ebbf89; color: #3d2706; }
+.dep .pl.changed { background: #d6c3a5; color: #3a2e1c; }
 .dep.cancelled .to, .dep.cancelled .t { text-decoration: line-through; opacity: .7; }
 .dep.empty { display: block; color: var(--glass-dim); }
 @media (max-width: 600px) {
@@ -149,11 +144,11 @@ html { scrollbar-color: var(--track) var(--ground); }
   .dep .t { font-size: 18px; }
   .dep .to { font-size: 16px; }
 }
-.m-long { background: #b0283a; } .m-reg { background: #5b4ba8; } .m-s { background: #2e7d32; }
-.m-u { background: #1565c0; } .m-tram { background: #c2410c; } .m-bus { background: #7b1fa2; } .m-ferry { background: #00838f; }
+.m-long { background: #8e3b45; } .m-reg { background: #5a5290; } .m-s { background: #3f6e47; }
+.m-u { background: #3d5f8c; } .m-tram { background: #9a5a36; } .m-bus { background: #6e4a85; } .m-ferry { background: #3d7479; }
 
 .display-foot { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 14px; color: var(--glass-dim); min-height: 1.4em; }
-.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #8bd8a0; }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #9dc7a8; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

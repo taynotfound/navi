@@ -102,7 +102,9 @@ class Nav(private val nc: NavHostController) {
     fun settings() = nc.navigate("settings")
     fun assistant() = nc.navigate("assistant")
     fun board(l: Location) = nc.navigate("board?id=${enc(l.id)}&name=${enc(l.name)}&lat=${l.lat}&lon=${l.lon}")
-    fun trip(id: String) = nc.navigate("trip?id=${enc(id)}")
+    /** [on]/[off]: stop ids where the user boards and leaves, highlighted in the trip view. */
+    fun trip(id: String, on: String? = null, off: String? = null) =
+        nc.navigate("trip?id=${enc(id)}&on=${enc(on.orEmpty())}&off=${enc(off.orEmpty())}")
     fun station(id: String, name: String) = nc.navigate("station?id=${enc(id)}&name=${enc(name)}")
 
     /** Make [l] the destination and jump to the planner. */
@@ -138,7 +140,10 @@ fun NaviApp() {
                 nav,
             )
         }
-        composable("trip?id={id}") { e -> TripScreen(e.arguments!!.getString("id")!!, nav) }
+        composable("trip?id={id}&on={on}&off={off}") { e ->
+            val a = e.arguments!!
+            TripScreen(a.getString("id")!!, nav, a.getString("on")?.ifEmpty { null }, a.getString("off")?.ifEmpty { null })
+        }
         composable("station?id={id}&name={name}") { e -> StationScreen(e.arguments!!.getString("id")!!, e.arguments!!.getString("name").orEmpty(), nav) }
     }
     if (askSupport) SupportDialog { askSupport = false }
