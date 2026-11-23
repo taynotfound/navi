@@ -1,0 +1,5 @@
+<resources>
+    <!-- dark is the default look -->
+    <color name="background">#FF070F24</color>
+    <color name="ic_background">#FF0A1C44</color>
+</resources>
