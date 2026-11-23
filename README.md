@@ -1,106 +1,64 @@
-<p align="center"><img src="site/logo.png" width="128" alt="Navi logo"></p>
+<p align="center"><img src="site/logo.png" width="120" alt=""></p>
 
-<h1 align="center">Navi</h1>
+# Navi
 
-<p align="center">The free navigator for trains, buses and trams across Germany.<br>
-Live departures, journey planning, station maps and step-free routes – no ads, no tracking.</p>
+Bus and train app for Germany. Live departures, journeys, lifts at stations, and you can share a trip as a link. No ads, no login, no tracking.
 
-<p align="center"><a href="https://taynotfound.github.io/navi/">Website</a> · <a href="https://github.com/taynotfound/navi/releases/latest">Download APK</a> · <a href="https://ko-fi.com/taygotkofi">Support on Ko-fi</a></p>
+[Website](https://taynotfound.github.io/navi/) · [Download the APK](https://github.com/taynotfound/navi/releases/latest) · [Buy me a coffee](https://ko-fi.com/taygotkofi)
 
----
+I built this because the other apps annoyed me. It covers every train, tram and bus that's in the German open timetable data, so local networks like VSN or VSB work too.
 
-## What it does
-
-- **Journeys** door to door, across every transport network in Germany (DB, VSN, VSB, …), with step-free and bike options.
-- **Live departure boards**: delays, platform changes, cancellations and operator notices straight from Deutsche Bahn, plus every bus and tram.
-- **Live trips**: saved and open journeys refresh themselves and tell you what to do next ("Change at Fulda · platform 3 → 5 · 8 min left").
-- **Share a trip** as a link – the recipient sees it live in the browser, no app needed.
-- **Station info**: lifts and escalators with live status, platforms, toilets and entrances on a map.
-- **Frag Navi**: ask in your own words ("next train to Kassel?"). A small assistant on free OpenRouter models answers from live data – and only about public transport and the app.
-- **Material 3 Expressive** design, dark by default, English and German, first-launch setup.
-
-## How it fits together
+## What's in here
 
 ```
-Android app (Kotlin · Jetpack Compose · Material 3 Expressive · MapLibre)
-        │  only talks to the Navi server
-        ▼
-Navi server (Go, no dependencies) — https://navi-api.taymaerz.de
- ├─ DB OpenBoards   live departure/arrival boards        (cached per station & minute)
- ├─ DB FaSta        live lift & escalator status          (cached 2 min)
- ├─ DB OpenStation  station data, NeTEx dump, CC0          (downloaded daily)
- └─ MOTIS           routing + all local transport          (Transitous by default)
+android/   the app (Kotlin, Compose, Material 3 Expressive, MapLibre)
+server/    the API the app talks to (Go, no dependencies)
+site/      the website, served by GitHub Pages
 ```
 
-The DB API keys stay on the server. The cache keeps the app far below the DB daily quotas, and the server stops calling a DB product before its quota runs out.
+The app only talks to the server. The server holds the DB API keys, caches everything so we stay under the DB quotas, and pulls the rest from these places:
 
-## Repository
+- DB OpenBoards for live departures
+- DB FaSta for lift and escalator status
+- DB OpenStation for station data (downloaded once a day)
+- Transitous / MOTIS for routing and all the local buses and trams
+- OpenRouter (free models only) for "Frag Navi", the little assistant. It only talks about public transport and the app.
 
-| Path | What |
-|---|---|
-| `android/` | The Android app |
-| `server/` | The Go API server and its Dockerfile |
-| `site/` | The website on GitHub Pages, including the live shared-trip page (`site/trip/`) |
-| `.github/workflows/build.yml` | Tests, signed APK on every push, GitHub release on `v*` tags, website to Pages and server to Pelican on `main` |
+## Running the server
 
-## Run the server
-
-Needs Go 1.24+ and a [DB API Marketplace](https://developers.deutschebahn.com) account subscribed to **OpenBoards** and **FaSta**.
+You need Go and a [DB API Marketplace](https://developers.deutschebahn.com) account with OpenBoards and FaSta.
 
 ```sh
 cd server
-cp .env.example .env        # add DB_CLIENT_ID and DB_API_KEY
-go run .                    # http://localhost:8080
+cp .env.example .env   # put your DB keys in there
+go run .
 ```
 
-Or with Docker: `docker compose up -d`. Put it behind HTTPS (Caddy, nginx or a Cloudflare tunnel) and set `TRUST_PROXY=1`.
+Or `docker compose up -d`. Everything you can set is in `server/.env.example`. The live one runs at https://navi-api.taymaerz.de.
 
-All settings are in [`server/.env.example`](server/.env.example). `MOTIS_URL` can point to your own [MOTIS](https://github.com/motis-project/motis) instance instead of Transitous.
+Endpoints, all JSON: `/v1/search`, `/v1/nearby`, `/v1/board`, `/v1/plan`, `/v1/trip`, `/v1/station`, `POST /v1/live`, `POST /v1/share`, `/v1/share?id=`, `POST /v1/assistant`.
 
-### API
+## Building the app
 
-| Endpoint | |
-|---|---|
-| `GET /v1/search?q=` | stations, stops, addresses |
-| `GET /v1/nearby?lat=&lon=` | stops around a point |
-| `GET /v1/board?stop=&arrivals=1` | live departures / arrivals |
-| `GET /v1/plan?from=&to=&time=&arriveBy=1&wheelchair=1&bike=1` | journeys (`from`/`to` = stop id or `lat,lon`) |
-| `GET /v1/trip?id=` | one vehicle's run |
-| `GET /v1/station?stop=` | station info with live lift status |
-| `POST /v1/live` | refresh an itinerary with live data |
-| `POST /v1/assistant` | "Frag Navi" (needs `OPENROUTER_API_KEY`; free models only, transit topics only) |
-| `POST /v1/share`, `GET /v1/share?id=` | share links (kept 7 days); they open `site/trip/?id=` |
-
-## Build the app
-
-Needs JDK 21 and the Android SDK (platform 37.1).
+JDK 21 and the Android SDK with platform 37.1.
 
 ```sh
 cd android
-./gradlew assembleDebug -PnaviApi=http://10.0.2.2:8080   # emulator → server on your machine
+./gradlew assembleDebug -PnaviApi=http://10.0.2.2:8080
 ```
 
-`naviApi` is the server URL baked into the app. Shared-trip links (`https://taynotfound.github.io/navi/trip/?id=…`) open in the app when it is installed.
+`naviApi` is the server the app uses (10.0.2.2 is your computer from inside the emulator).
 
-### Releases
-
-Every push builds a signed APK (`versionCode` = build number). Tag `vX.Y.Z` to publish a GitHub release.
-
-Repository secrets: `NAVI_KEYSTORE_BASE64`, `NAVI_KEYSTORE_PASSWORD`, `NAVI_KEY_ALIAS`, `NAVI_KEY_PASSWORD`, `PELICAN_API_KEY`.
-Repository variable: `NAVI_API` (defaults to `https://navi-api.taymaerz.de`).
+Every push to main builds a signed APK. Tag `vX.Y.Z` and it becomes a GitHub release. The same workflow puts the website on Pages and the server on my Pelican panel.
 
 ## Website
 
-Plain HTML/CSS in `site/`, no build step, deployed to GitHub Pages. Design notes: [DESIGN.md](DESIGN.md). Preview locally with `python3 -m http.server -d site 8091` (it talks to a dev server on port 8090).
+Plain HTML and CSS in `site/`, no build step. Try it locally with `python3 -m http.server -d site 8091`. Some notes on the look are in [DESIGN.md](DESIGN.md).
 
-## Data & credits
+## Thanks
 
-- Deutsche Bahn – OpenBoards, FaSta, OpenStation (CC0) via the [DB API Marketplace](https://developers.deutschebahn.com)
-- [Transitous](https://transitous.org) / [MOTIS](https://github.com/motis-project/motis) with DELFI timetables
-- Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, tiles by [OpenFreeMap](https://openfreemap.org), rendered with [MapLibre](https://maplibre.org)
-
-Navi is not affiliated with Deutsche Bahn.
+Map data © OpenStreetMap contributors, tiles from OpenFreeMap. Timetables from DELFI via Transitous. Station and live data from Deutsche Bahn. Navi is not a DB product.
 
 ## License
 
-[AGPL-3.0-or-later](LICENSE). See [AI-DECLARATION.md](AI-DECLARATION.md) for how AI was used to build Navi.
+AGPL-3.0, see [LICENSE](LICENSE). How AI was used is in [AI-DECLARATION.md](AI-DECLARATION.md).

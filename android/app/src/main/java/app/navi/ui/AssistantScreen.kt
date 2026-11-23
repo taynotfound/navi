@@ -25,7 +25,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.DepartureBoard
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material3.AssistChip
@@ -132,7 +132,7 @@ fun AssistantScreen(nav: Nav) {
                         Box(
                             Modifier.size(96.dp).clip(MaterialShapes.Cookie7Sided.toShape()).background(MaterialTheme.colorScheme.primaryContainer),
                             contentAlignment = Alignment.Center,
-                        ) { Icon(Icons.Filled.AutoAwesome, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer) }
+                        ) { Icon(Icons.AutoMirrored.Filled.Chat, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer) }
                         Spacer(Modifier.size(12.dp))
                         Text(stringResource(R.string.ask_intro), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (turns.isEmpty()) {

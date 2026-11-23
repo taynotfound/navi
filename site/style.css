@@ -127,18 +127,17 @@ img { display: block; }
 .chip-btn {
   font: 700 15px/1 var(--din);
   letter-spacing: .04em;
-  color: var(--ink);
-  background: var(--surface-hi);
-  border: 0;
-  border-radius: 999px;
-  padding: 12px 16px;
+  color: var(--ink-2);
+  background: transparent;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 13px;
   cursor: pointer;
   text-decoration: none;
-  transition: border-radius .4s var(--spring), background .2s;
 }
-.chip-btn:hover { border-radius: 12px; background: var(--line); }
+.chip-btn:hover { color: var(--ink); border-color: var(--ink-2); }
 .chip-btn svg { width: 20px; height: 20px; display: block; }
-.theme-btn { padding: 10px 13px; }
+.theme-btn { padding: 8px 10px; }
 
 /* bracket that mounts a plate on the pole */
 .mounted { position: relative; }
@@ -270,78 +269,33 @@ img { display: block; }
 .btn-alt { background: var(--surface-hi); color: var(--ink); }
 .get .soon { font-size: 15px; color: var(--ink-2); }
 
-/* ---------- further signs on the pole ---------- */
-.sign { margin-top: 84px; }
-.sign h2 { margin: 0 0 8px; font: 800 clamp(36px, 5.4vw, 60px)/1 var(--din); font-stretch: 85%; letter-spacing: -.01em; max-width: 18ch; text-wrap: balance; }
-.sign > p { margin: 0 0 26px; font-size: 20px; color: var(--ink-2); max-width: 52ch; }
-
-/* route band, like the one above a bus door */
-.band {
-  background: var(--surface);
-  border-radius: 22px;
-  padding: 26px 24px 22px;
-  box-shadow: inset 0 0 0 1px var(--line);
-  overflow-x: auto;
+/* ---------- the printed notice in the second case ("Fahrgastinformation") ---------- */
+.notice-case { margin-top: 40px; }
+.paper {
+  background: #f4f4ef;
+  color: #1b1d1c;
+  border-radius: 4px;
+  padding: clamp(24px, 4vw, 44px) clamp(22px, 4vw, 48px);
+  max-width: 68ch;
+  box-shadow: 0 2px 0 #d9d9d2, 0 14px 30px -12px rgba(0, 0, 0, .5);
+  font-size: 19px;
+  line-height: 1.55;
 }
-.band ol { list-style: none; margin: 0; padding: 0 0 4px; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(118px, 1fr); position: relative; }
-.band ol::before { content: ""; position: absolute; left: 8px; right: 8px; top: 9px; height: 6px; border-radius: 3px; background: var(--line); }
-.band li { position: relative; padding-top: 34px; padding-right: 10px; font-size: 16px; line-height: 1.35; }
-.band li::before { content: ""; position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--ground); border: 5px solid var(--line); }
-.band li.done { color: var(--ink-2); }
-.band li.done::before { background: var(--line); }
-.band li.here::before { border-color: var(--live); background: var(--live); box-shadow: 0 0 0 6px color-mix(in srgb, var(--live) 25%, transparent); }
-.band li.change::before { border-color: var(--teal); }
-.band li b { display: block; font-size: 18px; color: var(--ink); }
-.band li.done b { color: var(--ink-2); }
-.band .now {
-  margin: 22px 0 0;
-  padding: 18px 20px;
-  border-radius: 20px 20px 20px 6px;
-  background: var(--live-plate);
-  color: var(--live-plate-ink);
-  font: 800 clamp(20px, 2.6vw, 26px)/1.32 var(--din);
-}
-.band .now small { display: block; font-weight: 500; font-size: 17px; margin-top: 4px; }
-.example { font-size: 13px; color: var(--ink-2); margin: 10px 0 0; }
-
-/* lift panel */
-.lifts { list-style: none; margin: 0; padding: 0; columns: 2 300px; column-gap: 32px; }
-.lifts li { break-inside: avoid; display: flex; align-items: baseline; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
-.lifts li svg { width: 22px; height: 22px; flex: none; align-self: center; color: var(--ink-2); }
-.lifts li span { flex: 1; }
-.lifts li b { font: 700 15px/1 var(--din); white-space: nowrap; }
-
-/* the small rules plate */
-.rules { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.rules li {
-  font: 800 clamp(22px, 3vw, 32px)/1 var(--din);
-  font-stretch: 85%;
-  padding: 16px 22px 14px;
-  border-radius: 16px;
-  background: var(--surface-hi);
-}
-.rules li:nth-child(1) { border-radius: 999px; }
-.rules li:nth-child(4) { background: var(--plate); color: var(--plate-ink); }
-
-.support {
-  margin-top: 84px;
-  background: var(--live-plate);
-  color: var(--live-plate-ink);
-  border-radius: 36px 36px 36px 10px;
-  padding: clamp(32px, 4.5vw, 48px);
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 20px 28px;
-  align-items: center;
-}
-.support h2 { margin: 0 0 6px; font: 800 clamp(30px, 4vw, 44px)/1.05 var(--din); font-stretch: 85%; }
-.support p { margin: 0; font-size: 19px; max-width: 46ch; }
-.support .btn { background: var(--live-plate-ink); color: var(--live-ink); }
+.paper h2 { margin: 0; font: 800 clamp(30px, 4.6vw, 44px)/1 var(--din); font-stretch: 85%; }
+.paper .valid { margin: 8px 0 26px; padding-bottom: 14px; border-bottom: 3px solid #1b1d1c; font: 700 15px/1.3 var(--din); letter-spacing: .04em; text-transform: uppercase; }
+.paper p { margin: 0 0 16px; }
+.paper ul { margin: 0 0 18px; padding-left: 1.1em; }
+.paper li { margin: 0 0 8px; padding-left: .2em; }
+.paper li::marker { content: "› "; font-weight: 800; color: #1d6a64; }
+.paper a { color: #00574f; }
+.paper .sig { margin-top: 26px; font-weight: 700; }
+:root[data-theme="light"] .paper { box-shadow: 0 2px 0 #cfd6d4, 0 14px 30px -14px rgba(0, 0, 0, .25); }
 
 footer.base { margin-top: 64px; padding-top: 22px; border-top: 2px solid var(--line); color: var(--ink-2); font-size: 15px; display: flex; flex-wrap: wrap; gap: 8px 22px; }
 
 @media (max-width: 720px) {
   body { font-size: 17px; }
+  .paper { font-size: 17px; line-height: 1.5; }
   .stop { --pole-x: 22px; padding-left: calc(var(--pole-x) + 30px); padding-right: 14px; }
   .stop::before { left: calc(14px + var(--pole-x) - 4px); width: 8px; top: 92px; }
   .disc { left: calc(14px + var(--pole-x) - 38px); width: 76px; height: 76px; border-width: 3px; }
@@ -354,7 +308,6 @@ footer.base { margin-top: 64px; padding-top: 22px; border-top: 2px solid var(--l
   .dep { grid-template-columns: 52px auto 1fr auto; gap: 10px; }
   .dep .t { font-size: 19px; }
   .dep .to { font-size: 17px; }
-  .support { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

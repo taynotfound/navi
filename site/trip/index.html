@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0a0f0e">
 <meta name="robots" content="noindex">
-<title>Navi – Geteilte Fahrt</title>
+<title>Navi: Geteilte Fahrt</title>
 <script>try{if(localStorage.getItem("theme")==="light")document.documentElement.dataset.theme="light"}catch(e){}</script>
 <link rel="icon" href="../favicon.png">
 <link rel="preload" href="../fonts/dinish.woff2" as="font" type="font/woff2" crossorigin>
@@ -82,18 +82,18 @@
 // local previews talk to a dev server; the published site always uses the real API
 const API = /^(localhost|127\.0\.0\.1|10\.0\.2\.2)$/.test(location.hostname) ? `http://${location.hostname}:8090` : "https://navi-api.taymaerz.de";
 const L = {
-  de: { loading: "Fahrt wird geladen …", notFound: "Diesen Link gibt es nicht oder er ist abgelaufen (Links gelten 7 Tage).", error: "Live-Daten gerade nicht erreichbar. Neuer Versuch läuft …",
+  de: { loading: "Fahrt wird geladen …", notFound: "Den Link gibt’s nicht (mehr). Geteilte Fahrten halten 7 Tage.", error: "Die Live-Daten hängen gerade. Navi probiert’s gleich nochmal.",
     updated: "Live · Stand", walk: "Min. Fußweg", change: "Umstieg", cancelled: "fällt aus", onTime: "pünktlich", platform: "Gl.",
     leaves: m => `Abfahrt in ${m} Min.`, leavesAt: t => `Abfahrt um ${t}`, board: (l, s, p) => `${l} ab ${s}${p ? `, Gleis ${p}` : ""}`,
     riding: (l, h) => `Im ${l} Richtung ${h}`, getOff: (s, t, m) => `Aussteigen in ${s} um ${t} (in ${m} Min.)`,
-    changeAt: (s, m) => `Umstieg in ${s} · noch ${m} Min.`, arrived: "Angekommen.", partCancelled: "Ein Teil dieser Fahrt fällt aus.",
-    stops: n => `${n} Zwischenhalt${n === 1 ? "" : "e"}`, next: "nächster Halt", cta: "Live mitfahren wie hier – mit der App.", get: "Navi holen", shared: "Geteilte Fahrt" },
-  en: { loading: "Loading trip…", notFound: "This link doesn't exist or has expired (links last 7 days).", error: "Live data unavailable right now. Retrying…",
+    changeAt: (s, m) => `Umstieg in ${s} · noch ${m} Min.`, arrived: "Angekommen. Schön, dass du da bist.", partCancelled: "Ein Teil der Fahrt fällt aus. Das wird wohl nichts mit pünktlich.",
+    stops: n => `${n} Zwischenhalt${n === 1 ? "" : "e"}`, next: "nächster Halt", cta: "Willst du das auch? Navi gibt’s kostenlos.", get: "Navi holen", shared: "Geteilte Fahrt" },
+  en: { loading: "Loading trip…", notFound: "This link doesn't exist (anymore). Shared trips last 7 days.", error: "Live data is stuck right now. Navi will try again in a bit.",
     updated: "Live · updated", walk: "min walk", change: "Change", cancelled: "cancelled", onTime: "on time", platform: "Pl.",
     leaves: m => `Leaves in ${m} min`, leavesAt: t => `Leaves at ${t}`, board: (l, s, p) => `${l} from ${s}${p ? `, platform ${p}` : ""}`,
     riding: (l, h) => `On the ${l} towards ${h}`, getOff: (s, t, m) => `Get off at ${s} at ${t} (in ${m} min)`,
-    changeAt: (s, m) => `Change at ${s} · ${m} min left`, arrived: "Arrived.", partCancelled: "Part of this trip is cancelled.",
-    stops: n => `${n} stop${n === 1 ? "" : "s"}`, next: "next stop", cta: "Follow trips live like this – with the app.", get: "Get Navi", shared: "Shared trip" }
+    changeAt: (s, m) => `Change at ${s} · ${m} min left`, arrived: "Arrived. Welcome!", partCancelled: "Part of this trip is cancelled. On time is not happening.",
+    stops: n => `${n} stop${n === 1 ? "" : "s"}`, next: "next stop", cta: "Want this too? Navi is free.", get: "Get Navi", shared: "Shared trip" }
 };
 let lang = "de";
 try { lang = localStorage.getItem("lang") || (/^de\b/i.test(navigator.language) ? "de" : "en"); } catch (e) {}
@@ -146,7 +146,7 @@ function render() {
   document.getElementById("ctaBtn").textContent = T().get;
   if (!it) return;
   const first = it.legs[0].from, last = it.legs[it.legs.length - 1].to;
-  document.title = `Navi – ${first.name} → ${last.name}`;
+  document.title = `Navi: ${first.name} → ${last.name}`;
   document.getElementById("title").textContent = `${first.name} → ${last.name}`;
   document.getElementById("when").textContent = `${new Date(it.start).toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long" })} · ${hhmm(it.start)} – ${hhmm(it.end)}`;
   const cancelled = it.legs.some(l => l.cancelled || l.from.cancelled || l.to.cancelled);
