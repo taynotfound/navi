@@ -1,0 +1,14 @@
+# docker compose up -d   — then put Caddy/nginx with HTTPS in front (see README)
+services:
+  navi-server:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATA_DIR: /data
+    volumes:
+      - navi-data:/data
+    ports:
+      - "127.0.0.1:8080:8080"
+volumes:
+  navi-data:
