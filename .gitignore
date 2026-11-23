@@ -1,0 +1,15 @@
+# secrets
+.env
+*.keystore
+*.jks
+local.properties
+# server
+server/data/
+server/navi-server
+# android
+.gradle/
+build/
+.idea/
+*.iml
+.kotlin/
+captures/
