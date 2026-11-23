@@ -1,0 +1,125 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write # create releases on tags
+
+jobs:
+  pages:
+    # the website (site/) on GitHub Pages
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: server/go.mod
+      - run: go vet ./...
+      - run: go test ./...
+      - name: Build static binary
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o navi-server .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: navi-server
+          path: server/navi-server
+
+  android:
+    runs-on: ubuntu-latest
+    env:
+      # versionCode grows with every build, so every APK can update the previous one
+      VERSION_CODE: ${{ github.run_number }}
+      VERSION_NAME: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('0.1.{0}', github.run_number) }}
+      NAVI_API: ${{ vars.NAVI_API || 'https://navi-api.taymaerz.de' }}
+      HAS_KEY: ${{ secrets.NAVI_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+      - name: Install Android platform 37.1
+        run: sdkmanager "platforms;android-37.1"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Decode signing key
+        if: env.HAS_KEY == 'true'
+        run: echo "${{ secrets.NAVI_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/navi.jks"
+      - name: Test and build APK
+        working-directory: android
+        env:
+          NAVI_KEYSTORE: ${{ runner.temp }}/navi.jks
+          NAVI_KEYSTORE_PASSWORD: ${{ secrets.NAVI_KEYSTORE_PASSWORD }}
+          NAVI_KEY_ALIAS: ${{ secrets.NAVI_KEY_ALIAS }}
+          NAVI_KEY_PASSWORD: ${{ secrets.NAVI_KEY_PASSWORD }}
+        run: >
+          ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleRelease
+          -PnaviApi="$NAVI_API" -PversionCode="$VERSION_CODE" -PversionName="$VERSION_NAME"
+      - name: Name APK
+        run: mv android/app/build/outputs/apk/release/app-release*.apk "navi-$VERSION_NAME.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: navi-apk
+          path: navi-*.apk
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: navi-*.apk
+          generate_release_notes: true
+
+  deploy-server:
+    # pushes to main go live on the Pelican panel (needs the PELICAN_API_KEY secret)
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: server
+    runs-on: ubuntu-latest
+    env:
+      PANEL: https://panel.taymaerz.de
+      SERVER: ${{ vars.PELICAN_SERVER_ID || 'ae7b9822' }}
+      KEY: ${{ secrets.PELICAN_API_KEY }}
+    steps:
+      - name: Skip without key
+        if: env.KEY == ''
+        run: echo "PELICAN_API_KEY not set – skipping deploy"
+      - uses: actions/download-artifact@v4
+        if: env.KEY != ''
+        with:
+          name: navi-server
+      - name: Upload and restart
+        if: env.KEY != ''
+        run: |
+          set -euo pipefail
+          auth=(-H "Authorization: Bearer $KEY" -H "Accept: application/json")
+          api="$PANEL/api/client/servers/$SERVER"
+          url=$(curl -fsS "${auth[@]}" "$api/files/upload" | jq -r .attributes.url)
+          curl -fsS -o /dev/null -F "files=@navi-server" "$url&directory=/"
+          curl -fsS -o /dev/null "${auth[@]}" -H "Content-Type: application/json" -X POST "$api/files/chmod" \
+            -d '{"root":"/","files":[{"file":"navi-server","mode":"755"}]}'
+          curl -fsS -o /dev/null "${auth[@]}" -H "Content-Type: application/json" -X POST "$api/power" -d '{"signal":"restart"}'
+          echo "deployed"
