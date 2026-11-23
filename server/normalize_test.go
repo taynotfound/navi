@@ -125,3 +125,10 @@ func TestSharesRoundTripAndIDGuard(t *testing.T) {
 		t.Fatal("path traversal not rejected")
 	}
 }
+
+func TestAssistantDailyBudget(t *testing.T) {
+	as := &Assistant{DailyLimit: 2}
+	if !as.take() || !as.take() || as.take() {
+		t.Fatal("daily limit not enforced")
+	}
+}

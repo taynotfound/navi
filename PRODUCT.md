@@ -50,6 +50,7 @@ Used on the move: on platforms, at bus stops, while changing trains, often one-h
 - Live trips: saved/open itineraries refresh every 30 s; status card says what to do next.
 - Saved trips and favourite stations; first-launch setup; English and German; dark by default, light and system themes.
 - Station info: lifts/escalators with live status, platforms, toilets, entrances, on a map.
+- "Frag Navi" assistant: free OpenRouter models only, answers only about public transport in Germany and the Navi app (enforced server-side), grounded in Navi's live data tools.
 - Share links expire after 7 days.
 - Distribution: APK on GitHub Releases, installable via Obtainium. F-Droid is planned, not available yet.
 - Not affiliated with Deutsche Bahn; must not use DB branding.

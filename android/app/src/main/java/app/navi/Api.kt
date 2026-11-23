@@ -159,6 +159,18 @@ data class Station(
 @Serializable
 data class ShareLink(val id: String, val url: String)
 
+@Serializable
+data class ChatMessage(val role: String, val content: String)
+
+@Serializable
+data class AssistantLink(val kind: String, val label: String = "", val stopId: String? = null, val from: String? = null, val to: String? = null)
+
+@Serializable
+data class AssistantReply(val answer: String, val onTopic: Boolean = false, val links: List<AssistantLink> = emptyList())
+
+@Serializable
+private data class AssistantRequest(val messages: List<ChatMessage>, val lang: String, val lat: Double? = null, val lon: Double? = null)
+
 // ---------- client ----------
 
 class ApiException(message: String) : Exception(message)
@@ -199,6 +211,12 @@ object Api {
     suspend fun share(it: Itinerary) = get("/v1/share", emptyMap(), ShareLink.serializer(), json.encodeToString(Itinerary.serializer(), it))
 
     suspend fun shared(id: String) = get("/v1/share", mapOf("id" to id), Itinerary.serializer())
+
+    /** "Frag Navi": transit-only assistant on the server (free models). */
+    suspend fun ask(messages: List<ChatMessage>, lang: String, lat: Double?, lon: Double?) = get(
+        "/v1/assistant", emptyMap(), AssistantReply.serializer(),
+        json.encodeToString(AssistantRequest.serializer(), AssistantRequest(messages.takeLast(12), lang, lat, lon)),
+    )
 
     /** GET, or POST with a JSON [body]. */
     private suspend fun <T> get(path: String, params: Map<String, String?>, serializer: KSerializer<T>, body: String? = null): T =

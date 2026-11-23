@@ -33,6 +33,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.automirrored.filled.Accessible
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.automirrored.filled.DirectionsBike
@@ -202,6 +203,17 @@ fun JourneyTab(nav: Nav) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+
+        // "Frag Navi": ask in your own words instead of filling the form
+        androidx.compose.material3.FilledTonalButton(
+            onClick = nav::assistant,
+            shapes = ButtonDefaults.shapes(),
+            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp).height(56.dp),
+        ) {
+            Icon(Icons.Filled.AutoAwesome, null)
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.ask_entry), style = MaterialTheme.typography.titleMedium)
         }
 
         if (Store.recentJourneys.isNotEmpty()) {

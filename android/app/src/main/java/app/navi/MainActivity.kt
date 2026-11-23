@@ -100,6 +100,7 @@ class Nav(private val nc: NavHostController) {
     fun results() = nc.navigate("results")
     fun itinerary() = nc.navigate("itinerary")
     fun settings() = nc.navigate("settings")
+    fun assistant() = nc.navigate("assistant")
     fun board(l: Location) = nc.navigate("board?id=${enc(l.id)}&name=${enc(l.name)}&lat=${l.lat}&lon=${l.lon}")
     fun trip(id: String) = nc.navigate("trip?id=${enc(id)}")
     fun station(id: String, name: String) = nc.navigate("station?id=${enc(id)}&name=${enc(name)}")
@@ -129,6 +130,7 @@ fun NaviApp() {
         composable("results") { ResultsScreen(nav) }
         composable("itinerary") { ItineraryScreen(nav) }
         composable("settings") { SettingsScreen(nav) }
+        composable("assistant") { app.navi.ui.AssistantScreen(nav) }
         composable("board?id={id}&name={name}&lat={lat}&lon={lon}") { e ->
             val a = e.arguments!!
             BoardScreen(

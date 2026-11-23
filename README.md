@@ -16,6 +16,7 @@ Live departures, journey planning, station maps and step-free routes – no ads,
 - **Live trips**: saved and open journeys refresh themselves and tell you what to do next ("Change at Fulda · platform 3 → 5 · 8 min left").
 - **Share a trip** as a link – the recipient sees it live in the browser, no app needed.
 - **Station info**: lifts and escalators with live status, platforms, toilets and entrances on a map.
+- **Frag Navi**: ask in your own words ("next train to Kassel?"). A small assistant on free OpenRouter models answers from live data – and only about public transport and the app.
 - **Material 3 Expressive** design, dark by default, English and German, first-launch setup.
 
 ## How it fits together
@@ -67,6 +68,7 @@ All settings are in [`server/.env.example`](server/.env.example). `MOTIS_URL` ca
 | `GET /v1/trip?id=` | one vehicle's run |
 | `GET /v1/station?stop=` | station info with live lift status |
 | `POST /v1/live` | refresh an itinerary with live data |
+| `POST /v1/assistant` | "Frag Navi" (needs `OPENROUTER_API_KEY`; free models only, transit topics only) |
 | `POST /v1/share`, `GET /v1/share?id=` | share links (kept 7 days); they open `site/trip/?id=` |
 
 ## Build the app

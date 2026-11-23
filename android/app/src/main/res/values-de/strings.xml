@@ -209,4 +209,18 @@
     <string name="next">Weiter</string>
     <string name="done">Fertig</string>
     <string name="not_now">Jetzt nicht</string>
+    <string name="ask_entry">Frag Navi</string>
+    <string name="ask_title">Frag Navi</string>
+    <string name="ask_subtitle">Nur Bus &amp; Bahn · KI kann Fehler machen</string>
+    <string name="ask_intro">Frag einfach – ich schaue live nach Abfahrten und Verbindungen.</string>
+    <string name="ask_hint">z. B. nächster Zug nach Kassel?</string>
+    <string name="ask_send">Senden</string>
+    <string name="ask_thinking">Schaue in die Live-Daten …</string>
+    <string name="ask_failed">Das hat nicht geklappt. Bitte nochmal versuchen.</string>
+    <string name="ask_open_board">Abfahrten %s</string>
+    <string name="ask_open_plan">Verbindungen zeigen</string>
+    <string name="ask_s1">Wann fährt hier der nächste Zug?</string>
+    <string name="ask_s2">Geht der Aufzug in Göttingen?</string>
+    <string name="ask_s3">Wie teile ich eine Reise?</string>
+    <string name="ask_disclaimer">Kostenloses KI-Modell. Deine Frage und, falls erlaubt, dein Standort gehen an den Navi-Server und OpenRouter.</string>
 </resources>

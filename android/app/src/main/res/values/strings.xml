@@ -223,4 +223,19 @@
     <string name="next">Next</string>
     <string name="done">Done</string>
     <string name="not_now">Not now</string>
+    <!-- Frag Navi -->
+    <string name="ask_entry">Ask Navi</string>
+    <string name="ask_title">Ask Navi</string>
+    <string name="ask_subtitle">Buses &amp; trains only · AI can make mistakes</string>
+    <string name="ask_intro">Ask in your own words – I check live departures and connections for you.</string>
+    <string name="ask_hint">e.g. next train to Kassel?</string>
+    <string name="ask_send">Send</string>
+    <string name="ask_thinking">Checking live data…</string>
+    <string name="ask_failed">That didn\'t work. Please try again.</string>
+    <string name="ask_open_board">Departures %s</string>
+    <string name="ask_open_plan">Show connections</string>
+    <string name="ask_s1">When is the next train from here?</string>
+    <string name="ask_s2">Is the lift at Göttingen working?</string>
+    <string name="ask_s3">How do I share a trip?</string>
+    <string name="ask_disclaimer">Free AI model. Your question and, if allowed, your location go to the Navi server and OpenRouter.</string>
 </resources>

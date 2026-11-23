@@ -38,6 +38,7 @@ type App struct {
 	cache     *Cache
 	shares    *Shares
 	shareBase string
+	ai        *Assistant // nil when no OpenRouter key is set
 }
 
 type httpError struct {
@@ -484,12 +485,27 @@ func main() {
 		// shared trips open on the website's trip page
 		shareBase: env("SHARE_URL", "https://taynotfound.github.io/navi/trip/?id="),
 	}
+	if key := os.Getenv("OPENROUTER_API_KEY"); key != "" {
+		limit, _ := strconv.Atoi(env("ASSISTANT_DAILY_LIMIT", "300"))
+		var models []string
+		for _, m := range strings.Split(env("OPENROUTER_MODELS", "google/gemma-4-31b-it:free,nvidia/nemotron-3.5-super-vl:free,openrouter/free"), ",") {
+			// free models only, enforced here so a config typo can never cost money
+			if m = strings.TrimSpace(m); strings.HasSuffix(m, ":free") || m == "openrouter/free" {
+				models = append(models, m)
+			}
+		}
+		if len(models) > 0 {
+			app.ai = &Assistant{Key: key, Referer: env("SITE_URL", "https://taynotfound.github.io/navi/"), Models: models, DailyLimit: limit}
+		}
+	}
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	app.stations.Start(ctx) // non-blocking: boards work without it; station info appears once loaded
 
 	rl := &rateLimiter{perMin: perMin, buckets: map[string]*bucket{}}
 	shareRL := &rateLimiter{perMin: 0.5, burst: 10, buckets: map[string]*bucket{}} // ~30 new share links per hour per IP
+	aiRL := &rateLimiter{perMin: 4, burst: 6, buckets: map[string]*bucket{}}
 	get := func(h func(context.Context, url.Values) (any, error)) func(context.Context, *http.Request) (any, error) {
 		return func(ctx context.Context, r *http.Request) (any, error) { return h(ctx, r.URL.Query()) }
 	}
@@ -498,7 +514,7 @@ func main() {
 		"GET /v1/search": get(app.search), "GET /v1/nearby": get(app.nearby), "GET /v1/board": get(app.board),
 		"GET /v1/plan": get(app.plan), "GET /v1/trip": get(app.trip), "GET /v1/station": get(app.station),
 		"GET /healthz": get(app.health), "POST /v1/live": app.liveHandler, "GET /v1/share": app.shareGet,
-		"POST /v1/share": app.shareCreate,
+		"POST /v1/share": app.shareCreate, "POST /v1/assistant": app.assistantHandler,
 	} {
 		mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 			if strings.HasPrefix(pattern, "GET ") {
@@ -508,7 +524,7 @@ func main() {
 			if fwd := r.Header.Get("X-Forwarded-For"); trustProxy && fwd != "" {
 				ip = strings.TrimSpace(strings.Split(fwd, ",")[0])
 			}
-			if !rl.allow(ip) || (pattern == "POST /v1/share" && !shareRL.allow(ip)) {
+			if !rl.allow(ip) || (pattern == "POST /v1/share" && !shareRL.allow(ip)) || (pattern == "POST /v1/assistant" && !aiRL.allow(ip)) {
 				writeJSON(w, r, 429, map[string]string{"error": "too many requests"})
 				return
 			}
@@ -546,7 +562,7 @@ func main() {
 		defer cancel()
 		srv.Shutdown(shutdown)
 	}()
-	log.Printf("navi-server %s on %s (DB API %v, MOTIS %s)", version, srv.Addr, app.db.Enabled(), app.motis.Base)
+	log.Printf("navi-server %s on %s (DB API %v, MOTIS %s, assistant %v)", version, srv.Addr, app.db.Enabled(), app.motis.Base, app.ai != nil)
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
