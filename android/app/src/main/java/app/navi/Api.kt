@@ -80,6 +80,10 @@ data class Geometry(val points: String, val precision: Int = 6)
 @Serializable
 data class Alert(val header: String? = null, val text: String? = null)
 
+/** One walking instruction. kind: START | STRAIGHT | LEFT | RIGHT | SLIGHT_LEFT | SLIGHT_RIGHT | STAIRS | ELEVATOR | ESCALATOR */
+@Serializable
+data class Step(val kind: String, val street: String? = null, val distance: Int = 0)
+
 @Serializable
 data class Leg(
     val mode: String,
@@ -99,6 +103,7 @@ data class Leg(
     val stops: List<Place> = emptyList(),
     val geometry: Geometry? = null,
     val alerts: List<Alert> = emptyList(),
+    val steps: List<Step> = emptyList(),
 ) {
     val isWalk get() = mode == "WALK" || mode == "BIKE" || mode == "CAR"
 }

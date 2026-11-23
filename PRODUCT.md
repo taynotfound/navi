@@ -58,8 +58,8 @@ Used on the move: on platforms, at bus stops, while changing trains, often one-h
 ## Brand Commitments
 
 - Name: **Navi**.
-- Logo: train above a teal-to-orange infinity route ending in a location pin, on deep navy (`server/web/logo.png`, `android/app/src/main/res/drawable-nodpi/logo.png`).
-- Colours: M3 tonal palette generated from the logo seeds (teal route `#1FA39A`, coral pin `#F0603F`), dark-first.
+- Logo: an N drawn as a route, amber line with a start dot and a blue destination ring, on dark glass (`brand/logo.svg`; app copies in `android/app/src/main/res/drawable/`).
+- Colours: M3 tonal palette from a blue-graphite seed `#3D6FA8` and an amber seed `#E9A23B`, dark-first. See DESIGN.md.
 - Material 3 Expressive is the design direction (owner's requirement).
 - Bilingual: German and English.
 - Support link: https://ko-fi.com/taygotkofi

@@ -1,4 +1,5 @@
 import java.net.URI
+import java.util.Properties
 
 plugins {
     id("com.android.application")
@@ -7,9 +8,10 @@ plugins {
 }
 
 val naviApi = providers.gradleProperty("naviApi").get()
-// CI passes -PversionCode=<run number> -PversionName=<tag>
-val ciVersionCode = providers.gradleProperty("versionCode").orNull?.toInt() ?: 1
-val ciVersionName = providers.gradleProperty("versionName").orNull ?: "0.1.0"
+// The version lives in android/version.properties; pushing a change there makes CI publish a release.
+val versionProps = Properties().also { p -> rootProject.file("version.properties").inputStream().use { p.load(it) } }
+val ciVersionCode = versionProps.getProperty("versionCode").toInt()
+val ciVersionName = versionProps.getProperty("versionName")
 // release signing only when the keystore is provided (CI secrets or local env)
 val keystore = System.getenv("NAVI_KEYSTORE")?.let { file(it) }?.takeIf { it.exists() }
 // share links open in the app: the website's trip page and old https://<api>/j/… links

@@ -1,5 +1,19 @@
 package app.navi.ui
 
+import app.navi.Step
+import androidx.compose.material.icons.filled.Straight
+import androidx.compose.material.icons.filled.Escalator
+import androidx.compose.material.icons.filled.Elevator
+import androidx.compose.material.icons.filled.Stairs
+import androidx.compose.material.icons.filled.TurnSlightRight
+import androidx.compose.material.icons.filled.TurnSlightLeft
+import androidx.compose.material.icons.filled.TurnRight
+import androidx.compose.material.icons.filled.TurnLeft
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.Canvas
 import android.content.Intent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -146,9 +160,9 @@ fun JourneyTab(nav: Nav) {
         ElevatedCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp), shape = RoundedCornerShape(28.dp)) {
             Box {
                 Column(Modifier.padding(vertical = 8.dp)) {
-                    PlaceField(stringResource(R.string.from), JourneyForm.from, stringResource(R.string.choose_start), dotFilled = false) { picking = "from" }
+                    PlaceField(stringResource(R.string.from), JourneyForm.from, stringResource(R.string.choose_start), dotFilled = true) { picking = "from" }
                     HorizontalDivider(Modifier.padding(start = 52.dp, end = 72.dp))
-                    PlaceField(stringResource(R.string.to), JourneyForm.to, stringResource(R.string.choose_destination), dotFilled = true) { picking = "to" }
+                    PlaceField(stringResource(R.string.to), JourneyForm.to, stringResource(R.string.choose_destination), dotFilled = false) { picking = "to" }
                 }
                 FilledTonalIconButton(
                     onClick = { JourneyForm.swap() },
@@ -206,34 +220,41 @@ fun JourneyTab(nav: Nav) {
         }
 
         // "Frag Navi": ask in your own words instead of filling the form
-        androidx.compose.material3.FilledTonalButton(
+        androidx.compose.material3.OutlinedButton(
             onClick = nav::assistant,
             shapes = ButtonDefaults.shapes(),
-            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp).height(56.dp),
+            modifier = Modifier.padding(start = 16.dp, top = 12.dp).height(48.dp),
         ) {
-            Icon(Icons.AutoMirrored.Filled.Chat, null)
+            Icon(Icons.AutoMirrored.Filled.Chat, null, Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.ask_entry), style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.ask_entry))
         }
 
         if (Store.recentJourneys.isNotEmpty()) {
             SectionHeader(stringResource(R.string.recent))
             Store.recentJourneys.forEach { j ->
-                Card(
-                    onClick = {
+                // each recent trip drawn as a tiny route: start dot, line, destination ring
+                Row(
+                    Modifier.fillMaxWidth().clickable {
                         JourneyForm.from = j.from; JourneyForm.to = j.to
                         nav.results()
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                    }.padding(horizontal = 24.dp, vertical = 10.dp).height(IntrinsicSize.Min),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(Modifier.width(16.dp))
-                        Text(j.from.name, Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.padding(horizontal = 8.dp).size(18.dp))
-                        Text(j.to.name, Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Medium)
+                    val c = MaterialTheme.colorScheme
+                    Canvas(Modifier.width(14.dp).fillMaxHeight().padding(vertical = 6.dp)) {
+                        val x = size.width / 2; val r = 5.dp.toPx()
+                        drawLine(c.outlineVariant, Offset(x, r), Offset(x, size.height - r), 3.dp.toPx())
+                        drawCircle(c.primary, r, Offset(x, r))
+                        drawCircle(c.surface, r, Offset(x, size.height - r))
+                        drawCircle(c.tertiary, r - 1.dp.toPx(), Offset(x, size.height - r), style = Stroke(2.5.dp.toPx()))
                     }
+                    Spacer(Modifier.width(16.dp))
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(j.from.name, maxLines = 1, overflow = TextOverflow.Ellipsis, color = c.onSurfaceVariant)
+                        Text(j.to.name, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
+                    }
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = c.onSurfaceVariant)
                 }
             }
         }
@@ -269,7 +290,7 @@ private fun PlaceField(label: String, value: Location?, placeholder: String, dot
         val c = MaterialTheme.colorScheme.primary
         Box(
             Modifier.size(14.dp).clip(CircleShape)
-                .then(if (dotFilled) Modifier.background(c) else Modifier.border(3.dp, c, CircleShape)),
+                .then(if (dotFilled) Modifier.background(c) else Modifier.border(3.dp, MaterialTheme.colorScheme.tertiary, CircleShape)),
         )
         Spacer(Modifier.width(18.dp))
         Column {
@@ -398,7 +419,7 @@ fun ResultsScreen(nav: Nav) {
                                     Icon(Icons.AutoMirrored.Filled.DirectionsWalk, null)
                                     Spacer(Modifier.width(12.dp))
                                     Text(stringResource(R.string.on_foot, dur(d.duration)), style = MaterialTheme.typography.titleSmall)
-                                    d.legs.firstOrNull()?.distance?.let { Text("  ·  ${formatDistance(it)}") }
+                                    d.legs.firstOrNull()?.distance?.let { Text(", ${formatDistance(it)}") }
                                 }
                             }
                         }
@@ -444,7 +465,7 @@ fun ItineraryCard(it: Itinerary, onClick: () -> Unit) {
                         val dep = stringResource(R.string.departure)
                         val arr = stringResource(R.string.arrival)
                         Text(
-                            listOfNotNull(depDelay?.takeIf { d -> d > 0 }?.let { d -> "$dep +$d" }, arrDelay?.takeIf { d -> d > 0 }?.let { d -> "$arr +$d" }).joinToString(" · "),
+                            listOfNotNull(depDelay?.takeIf { d -> d > 0 }?.let { d -> "$dep +$d" }, arrDelay?.takeIf { d -> d > 0 }?.let { d -> "$arr +$d" }).joinToString(", "),
                             color = delayColor(maxOf(depDelay ?: 0, arrDelay ?: 0)),
                             style = MaterialTheme.typography.labelLarge,
                         )
@@ -551,7 +572,7 @@ fun ItineraryScreen(nav: Nav) {
                 title = {
                     Column {
                         Text("${hhmm(it.start)} – ${hhmm(it.end)}", style = MaterialTheme.typography.titleMedium)
-                        Text("${dur(it.duration)} · ${transfersText(it.transfers)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${dur(it.duration)}, ${transfersText(it.transfers)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 actions = {
@@ -634,22 +655,72 @@ fun LiveStatusCard(it: Itinerary, updatedAt: ZonedDateTime?) {
             t ?: (stringResource(R.string.status_arrived) to toNameOf(it))
         }
     }
-    Card(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (cancelled) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer,
-            contentColor = if (cancelled) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
+    // Looks like the passenger display above a train door, in light mode too.
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(28.dp)).background(Display.glass).padding(20.dp),
     ) {
-        Column(Modifier.padding(20.dp)) {
-            if (updatedAt != null) Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(8.dp).clip(CircleShape).background(StatusColors.onTime))
+        Text(
+            title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold,
+            color = if (cancelled) Display.alarm else Display.amber,
+        )
+        if (detail.isNotBlank()) Text(detail, Modifier.padding(top = 4.dp), style = MaterialTheme.typography.bodyLarge, color = Display.text)
+        RouteStrip(it.legs, now, Modifier.padding(top = 18.dp))
+        Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(hhmm(it.legs.first().from.departure ?: it.start), style = MaterialTheme.typography.labelMedium, color = Display.dim)
+            Spacer(Modifier.weight(1f))
+            if (updatedAt != null) {
+                Box(Modifier.size(7.dp).clip(CircleShape).background(Display.live))
                 Spacer(Modifier.width(6.dp))
-                Text(stringResource(R.string.live_updated, hhmm(updatedAt)), style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.live_updated, hhmm(updatedAt)), style = MaterialTheme.typography.labelMedium, color = Display.dim)
+                Spacer(Modifier.weight(1f))
             }
-            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-            if (detail.isNotBlank()) Text(detail, style = MaterialTheme.typography.bodyLarge)
+            Text(hhmm(it.legs.last().to.arrival ?: it.end), style = MaterialTheme.typography.labelMedium, color = Display.dim)
+        }
+    }
+}
+
+/** Fixed colours of the passenger display; it stays dark glass whatever the app theme is. */
+object Display {
+    val glass = Color(0xFF161A1F)
+    val amber = Color(0xFFEBBF89)
+    val next = Color(0xFFB0C8EC)
+    val text = Color(0xFFE2E5EF)
+    val dim = Color(0xFFA7ABB4)
+    val track = Color(0xFF444850)
+    val live = Color(0xFF8BD8A0)
+    val alarm = Color(0xFFFF9993)
+}
+
+/** The trip as one line, walks included: each ride in its line colour, the part already behind you in amber, the next stop as a blue ring. */
+@Composable
+private fun RouteStrip(transit: List<Leg>, now: ZonedDateTime, modifier: Modifier = Modifier) {
+    // walks draw as plain track, only rides get a colour
+    val times = transit.flatMap { l ->
+        listOf(parseTime(l.from.departure ?: l.from.scheduledDeparture), parseTime(l.to.arrival ?: l.to.scheduledArrival))
+    }.map { it?.toEpochSecond() ?: now.toEpochSecond() }
+    val start = times.first(); val span = (times.last() - start).coerceAtLeast(1)
+    fun x(t: Long, w: Float) = ((t - start).toFloat() / span).coerceIn(0f, 1f) * w
+    val nowS = now.toEpochSecond()
+    val colors = transit.map { if (it.isWalk) Display.track else legColor(it) }
+    Canvas(modifier.fillMaxWidth().height(22.dp)) {
+        val y = size.height / 2; val r = 7.dp.toPx(); val w = size.width - 2 * r
+        val stroke = 5.dp.toPx()
+        translate(left = r) {
+            drawLine(Display.track, Offset(0f, y), Offset(w, y), stroke, StrokeCap.Round)
+            transit.indices.forEach { i ->
+                drawLine(colors[i].copy(alpha = .55f), Offset(x(times[2 * i], w), y), Offset(x(times[2 * i + 1], w), y), stroke, StrokeCap.Round)
+            }
+            drawLine(Display.amber, Offset(0f, y), Offset(x(nowS, w), y), stroke, StrokeCap.Round)
+            val nextIdx = times.indexOfFirst { it > nowS }
+            times.forEachIndexed { i, t ->
+                val c = Offset(x(t, w), y)
+                when {
+                    t <= nowS -> drawCircle(Display.amber, r, c)
+                    i == nextIdx -> { drawCircle(Display.glass, r, c); drawCircle(Display.next, r - 1.5.dp.toPx(), c, style = Stroke(3.dp.toPx())) }
+                    else -> { drawCircle(Display.glass, r, c); drawCircle(Display.track, r - 1.5.dp.toPx(), c, style = Stroke(3.dp.toPx())) }
+                }
+            }
         }
     }
 }
@@ -668,15 +739,62 @@ private fun shareText(it: Itinerary) = buildString {
 
 @Composable
 private fun WalkLeg(l: Leg, isTransfer: Boolean) {
-    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.width(52.dp), contentAlignment = Alignment.Center) {
-            Icon(modeIcon(l.mode), null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    var open by rememberSaveable { mutableStateOf(false) }
+    val steps = l.steps.filter { it.distance > 0 || it.kind == "ELEVATOR" }
+    val c = MaterialTheme.colorScheme
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp).clip(RoundedCornerShape(20.dp)).animateContentSize()) {
+        Row(
+            Modifier.fillMaxWidth().clickable(enabled = steps.size > 1) { open = !open }.padding(vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(Modifier.width(52.dp), contentAlignment = Alignment.Center) { Icon(modeIcon(l.mode), null, tint = c.onSurfaceVariant) }
+            val what = stringResource(when (l.mode) { "BIKE" -> R.string.bike; "CAR" -> R.string.car; else -> if (isTransfer) R.string.transfer_walk else R.string.mode_walk })
+            Text(
+                listOfNotNull("$what ${dur(l.duration)}", formatDistance(l.distance)).joinToString(", "),
+                Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = c.onSurfaceVariant,
+            )
+            if (steps.size > 1) {
+                Text(stringResource(if (open) R.string.hide_directions else R.string.show_directions), style = MaterialTheme.typography.labelLarge, color = c.primary)
+                Icon(if (open) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, null, Modifier.padding(start = 2.dp).size(20.dp), tint = c.primary)
+            }
         }
-        val what = stringResource(when (l.mode) { "BIKE" -> R.string.bike; "CAR" -> R.string.car; else -> if (isTransfer) R.string.transfer_walk else R.string.mode_walk })
-        Text(
-            listOfNotNull("$what ${dur(l.duration)}", formatDistance(l.distance)).joinToString(" · "),
-            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        if (open) Column(Modifier.padding(start = 14.dp, bottom = 8.dp)) {
+            steps.forEach { st ->
+                Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(30.dp).clip(CircleShape).background(c.surfaceContainerHigh), contentAlignment = Alignment.Center) {
+                        Icon(stepIcon(st.kind), null, Modifier.size(18.dp), tint = if (st.kind in setOf("STAIRS", "ELEVATOR", "ESCALATOR")) c.tertiary else c.onSurface)
+                    }
+                    Spacer(Modifier.width(14.dp))
+                    Text(stepText(st), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                    formatDistance(st.distance.toDouble())?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = c.onSurfaceVariant) }
+                }
+            }
+        }
+    }
+}
+
+private fun stepIcon(kind: String) = when (kind) {
+    "LEFT" -> Icons.Filled.TurnLeft
+    "RIGHT" -> Icons.Filled.TurnRight
+    "SLIGHT_LEFT" -> Icons.Filled.TurnSlightLeft
+    "SLIGHT_RIGHT" -> Icons.Filled.TurnSlightRight
+    "STAIRS" -> Icons.Filled.Stairs
+    "ELEVATOR" -> Icons.Filled.Elevator
+    "ESCALATOR" -> Icons.Filled.Escalator
+    else -> Icons.Filled.Straight
+}
+
+@Composable
+private fun stepText(st: Step): String {
+    val street = st.street?.takeIf { it.isNotBlank() }
+    return when (st.kind) {
+        "START" -> if (street != null) stringResource(R.string.step_start_on, street) else stringResource(R.string.step_start)
+        "LEFT", "SLIGHT_LEFT" -> if (street != null) stringResource(R.string.step_left_on, street) else stringResource(R.string.step_left)
+        "RIGHT", "SLIGHT_RIGHT" -> if (street != null) stringResource(R.string.step_right_on, street) else stringResource(R.string.step_right)
+        "STAIRS" -> stringResource(R.string.step_stairs)
+        "ELEVATOR" -> stringResource(R.string.step_elevator)
+        "ESCALATOR" -> stringResource(R.string.step_escalator)
+        else -> if (street != null) stringResource(R.string.step_straight_on, street) else stringResource(R.string.step_straight)
     }
 }
 
@@ -719,7 +837,7 @@ private fun TransitLeg(l: Leg, nav: Nav) {
                         listOfNotNull(
                             dur(l.duration),
                             l.stops.size.takeIf { it > 0 }?.let { n -> androidx.compose.ui.res.pluralStringResource(R.plurals.stops, n, n) },
-                        ).joinToString(" · "),
+                        ).joinToString(", "),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     if (l.stops.isNotEmpty()) Icon(if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, stringResource(if (expanded) R.string.hide_stops else R.string.show_stops), Modifier.size(18.dp))

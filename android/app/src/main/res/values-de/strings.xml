@@ -223,4 +223,17 @@
     <string name="ask_s2">Geht der Aufzug in Göttingen?</string>
     <string name="ask_s3">Wie teile ich eine Reise?</string>
     <string name="ask_disclaimer">Läuft auf einem kostenlosen KI-Modell. Deine Frage (und dein Standort, falls erlaubt) geht an den Navi-Server und OpenRouter.</string>
+<string name="show_directions">Wegbeschreibung</string>
+    <string name="hide_directions">Zuklappen</string>
+    <string name="step_start">Los geht’s</string>
+    <string name="step_start_on">Los geht’s auf %1$s</string>
+    <string name="step_straight">Weiter geradeaus</string>
+    <string name="step_straight_on">Weiter auf %1$s</string>
+    <string name="step_left">Links abbiegen</string>
+    <string name="step_left_on">Links in %1$s</string>
+    <string name="step_right">Rechts abbiegen</string>
+    <string name="step_right_on">Rechts in %1$s</string>
+    <string name="step_stairs">Treppe nehmen</string>
+    <string name="step_elevator">Aufzug nehmen</string>
+    <string name="step_escalator">Rolltreppe nehmen</string>
 </resources>

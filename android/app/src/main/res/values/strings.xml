@@ -238,4 +238,17 @@
     <string name="ask_s2">Is the lift at Göttingen working?</string>
     <string name="ask_s3">How do I share a trip?</string>
     <string name="ask_disclaimer">Runs on a free AI model. Your question (and your location, if allowed) goes to the Navi server and OpenRouter.</string>
+<string name="show_directions">Directions</string>
+    <string name="hide_directions">Hide</string>
+    <string name="step_start">Head off</string>
+    <string name="step_start_on">Head off along %1$s</string>
+    <string name="step_straight">Keep going</string>
+    <string name="step_straight_on">Keep going along %1$s</string>
+    <string name="step_left">Turn left</string>
+    <string name="step_left_on">Turn left onto %1$s</string>
+    <string name="step_right">Turn right</string>
+    <string name="step_right_on">Turn right onto %1$s</string>
+    <string name="step_stairs">Take the stairs</string>
+    <string name="step_elevator">Take the lift</string>
+    <string name="step_escalator">Take the escalator</string>
 </resources>

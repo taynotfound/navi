@@ -3,126 +3,154 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0a0f0e">
+<meta name="theme-color" content="#0c0e12">
 <title>Navi: Bus und Bahn, live</title>
 <meta name="description" content="Navi zeigt dir jede Abfahrt in Deutschland live. Bus, Bahn, Tram. Kostenlos, ohne Werbung, ohne Login.">
 <meta property="og:title" content="Navi: Bus und Bahn, live">
 <meta property="og:description" content="Jede Abfahrt in Deutschland live. Kostenlos und ohne Werbung.">
-<meta property="og:image" content="og.png">
+<meta property="og:image" content="https://taynotfound.github.io/navi/og.png">
 <script>try{if(localStorage.getItem("theme")==="light")document.documentElement.dataset.theme="light"}catch(e){}</script>
-<link rel="icon" href="favicon.png">
-<link rel="preload" href="fonts/dinish.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.png" sizes="64x64">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" href="fonts/atkinson-next.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="style.css">
+<style>
+  .hero { padding: 48px 0 40px; }
+  .hero h1 { margin: 0; max-width: 15ch; font-size: clamp(40px, 6.4vw, 76px); line-height: 1.02; font-weight: 800; letter-spacing: -.025em; text-wrap: balance; }
+  .hero p { margin: 20px 0 0; max-width: 44ch; font-size: 21px; color: var(--ink-2); }
+  .get { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 32px; }
+  .get .soon { color: var(--ink-2); font-size: 15px; margin-left: 6px; }
+
+  .head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 26px; }
+  .head h2 { margin: 0; font-size: clamp(28px, 4vw, 40px); line-height: 1.1; font-weight: 800; letter-spacing: -.015em; color: #ebbf89; }
+  .head .clock { margin-left: auto; font-size: 22px; font-weight: 700; color: var(--glass-dim); }
+  #board { min-height: 380px; }
+
+  .letter { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 56px; margin-top: 96px; }
+  .letter h2 { margin: 0; font-size: clamp(30px, 4vw, 44px); line-height: 1.08; font-weight: 800; letter-spacing: -.02em; }
+  .letter .intro p { max-width: 40ch; color: var(--ink-2); }
+  .letter .intro p:first-of-type { margin-top: 18px; }
+  .sig { color: var(--ink) !important; font-weight: 700; }
+  /* the feature list is a ride: one stop per thing Navi does */
+  .ride { list-style: none; margin: 0; padding: 0; position: relative; }
+  .ride::before { content: ""; position: absolute; left: 9px; top: 14px; bottom: 14px; width: 5px; border-radius: 3px; background: var(--line); }
+  .ride li { position: relative; padding: 0 0 26px 44px; }
+  .ride li:last-child { padding-bottom: 0; }
+  .ride li::before { content: ""; position: absolute; left: 0; top: 3px; width: 23px; height: 23px; border-radius: 50%; box-sizing: border-box; background: var(--ground); border: 4px solid var(--amber); }
+  .ride li:last-child::before { border-color: var(--next); }
+  .ride b { display: block; font-size: 19px; }
+  .ride span { color: var(--ink-2); }
+  @media (max-width: 800px) {
+    .hero { padding-top: 24px; }
+    .letter { grid-template-columns: 1fr; gap: 32px; margin-top: 72px; }
+    .head .clock { font-size: 18px; }
+  }
+</style>
 </head>
 <body>
-<main class="stop">
-  <div class="disc"><img src="logo.png" alt="Navi" width="70" height="70"></div>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./"><img src="logo.svg" alt="" width="40" height="40">Navi</a>
+    <a class="text-btn" href="https://github.com/taynotfound/navi" rel="noopener">GitHub</a>
+    <button class="icon-btn" id="theme" type="button" aria-label="Helles Design"></button>
+    <button class="text-btn" id="lang" type="button">EN</button>
+  </header>
 
-  <div class="topbar">
-    <a class="chip-btn" href="https://github.com/taynotfound/navi" rel="noopener">GitHub</a>
-    <button class="chip-btn theme-btn" id="theme" type="button" aria-label="Helles Design"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg></button>
-    <button class="chip-btn" id="lang" type="button">EN</button>
-  </div>
-
-  <section class="mounted" aria-labelledby="name">
-    <div class="plate">
-      <h1 id="name">Navi</h1>
-      <ul class="served" aria-label="Verkehrsmittel" data-i-aria="served">
-        <li class="m-long">ICE · IC</li><li class="m-reg">RE · RB</li><li class="m-s">S</li>
-        <li class="m-u">U</li><li class="m-tram">Tram</li><li class="m-bus">Bus</li>
-      </ul>
-      <p class="say" data-i="say">Bus und Bahn in ganz Deutschland. Live, und ohne Gedöns.</p>
-    </div>
-
-    <div class="case">
-      <div class="case-in">
-        <div class="case-head">
-          <h2><span data-i="dep">Abfahrt</span> <b id="stopname">Göttingen</b></h2>
-          <span class="live" id="live" hidden><i></i><span data-i="live">live</span></span>
-          <span class="clock" id="clock" aria-hidden="true"></span>
-        </div>
-        <div class="stops" role="group" aria-label="Haltestelle wählen" data-i-aria="pick">
-          <button type="button" data-stop="de-DELFI_de:03152:33817" aria-pressed="true">Göttingen</button>
-          <button type="button" data-stop="de-DELFI_de:06412:10" aria-pressed="false">Frankfurt Hbf</button>
-          <button type="button" data-stop="de-DELFI_de:08326:6592" aria-pressed="false">Villingen</button>
-          <button type="button" data-stop="de-DELFI_de:11000:900003201" aria-pressed="false">Berlin Hbf</button>
-        </div>
-        <ol class="board" id="board" aria-live="polite"></ol>
-        <p class="board-note" id="note"></p>
-        <div class="get">
-          <a class="btn btn-main" href="https://github.com/taynotfound/navi/releases/latest" rel="noopener">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 20h16"/></svg>
-            <span data-i="apk">App holen (APK)</span>
-          </a>
-          <a class="btn btn-alt" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/taynotfound/navi" rel="noopener" data-i="obt">Über Obtainium</a>
-          <span class="soon" data-i="soon">F-Droid kommt noch.</span>
-        </div>
+  <main>
+    <section class="hero">
+      <h1 data-i="h1">Bus und Bahn in ganz Deutschland. Live.</h1>
+      <p data-i="say">Jede Abfahrt, jede Verspätung, jeder Gleiswechsel. Vom ICE bis zum Dorfbus, ohne Werbung und ohne Login.</p>
+      <div class="get">
+        <a class="btn btn-main" href="https://github.com/taynotfound/navi/releases" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 20h16"/></svg>
+          <span data-i="apk">App holen (APK)</span>
+        </a>
+        <a class="btn btn-alt" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/taynotfound/navi" rel="noopener" data-i="obt">Über Obtainium</a>
+        <span class="soon" data-i="soon">F-Droid kommt noch.</span>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="case notice-case mounted" aria-labelledby="notice">
-    <div class="case-in">
-      <article class="paper" id="paper">
-        <h2 id="notice">Fahrgastinformation</h2>
-        <p class="valid">Gültig ab sofort</p>
-        <p>Moin,</p>
-        <p>ich bin tay und hab Navi gebaut, weil mich die anderen Apps genervt haben. Werbung hier, Login da, und irgendwer will immer wissen, wo ich gerade bin. Navi kann das Wichtige und lässt dich ansonsten in Ruhe.</p>
-        <ul>
-          <li>Abfahrten live, mit Verspätung und Gleiswechsel. Für jeden ICE und jeden Dorfbus.</li>
-          <li>Verbindungen suchen, auf Wunsch ohne Treppen.</li>
-          <li>Ob der Aufzug am Bahnhof geht, siehst du, bevor du davor stehst.</li>
-          <li>Unterwegs zeigt dir Navi nur, was als Nächstes dran ist. Umsteigen in Fulda, Gleis 3 nach 5, noch 8 Minuten. Fertig.</li>
-          <li>Fahrt teilen: Link rüberschicken, und wer auf dich wartet, sieht live, wann du ankommst. Ohne App.</li>
-          <li>Oder einfach fragen: „Wann fährt der nächste Bus zum Bahnhof?“</li>
-        </ul>
+    <section class="display" aria-labelledby="stopname">
+      <div class="head">
+        <h2 id="stopname">Göttingen</h2>
+        <span class="clock" id="clock" aria-hidden="true"></span>
+      </div>
+      <div class="strip-wrap">
+      <ol class="strip" id="strip" aria-label="Haltestelle wählen" data-i-aria="pick">
+        <li><button type="button" data-stop="de-DELFI_de:03152:33817" aria-pressed="true"><i class="dot"></i>Göttingen</button></li>
+        <li><button type="button" data-stop="de-DELFI_de:06412:10" aria-pressed="false"><i class="dot"></i>Frankfurt Hbf</button></li>
+        <li><button type="button" data-stop="de-DELFI_de:08326:6592" aria-pressed="false"><i class="dot"></i>Villingen</button></li>
+        <li><button type="button" data-stop="de-DELFI_de:11000:900003201" aria-pressed="false"><i class="dot"></i>Berlin Hbf</button></li>
+      </ol>
+      <span class="fill" id="fill" aria-hidden="true"></span>
+      </div>
+      <ol class="board" id="board" aria-live="polite"></ol>
+      <p class="display-foot" id="note"></p>
+    </section>
+
+    <section class="letter" aria-labelledby="hi">
+      <div class="intro" id="intro">
+        <h2 id="hi">Moin, ich bin tay.</h2>
+        <p>Ich hab Navi gebaut, weil mich die anderen Apps genervt haben. Werbung hier, Login da, und irgendwer will immer wissen, wo ich gerade bin.</p>
         <p>Navi kostet nichts und ist Open Source. Wenn’s dir hilft, kannst du mir auf <a href="https://ko-fi.com/taygotkofi" rel="noopener">Ko-fi</a> einen Kaffee ausgeben. Musst du aber nicht.</p>
-        <p class="sig">Gute Fahrt!<br>tay</p>
-      </article>
-    </div>
-  </section>
+        <p class="sig">Gute Fahrt!</p>
+      </div>
+      <ol class="ride" id="ride">
+        <li><b>Abfahrten live</b><span>Mit Verspätung und Gleiswechsel, für jeden ICE und jeden Dorfbus.</span></li>
+        <li><b>Verbindungen suchen</b><span>Mit Fußweg Schritt für Schritt, und auf Wunsch ohne Treppen.</span></li>
+        <li><b>Aufzüge am Bahnhof</b><span>Ob der Aufzug geht, siehst du, bevor du davor stehst.</span></li>
+        <li><b>Unterwegs nur das Nächste</b><span>Umsteigen in Fulda, Gleis 3 nach 5, noch 8 Minuten. Fertig.</span></li>
+        <li><b>Fahrt teilen</b><span>Link rüberschicken, und wer auf dich wartet, sieht live, wann du ankommst. Ohne App.</span></li>
+        <li><b>Einfach fragen</b><span>„Wann fährt der nächste Bus zum Bahnhof?“ Frag Navi antwortet mit echten Abfahrten.</span></li>
+      </ol>
+    </section>
+  </main>
 
-  <footer class="base">
+  <footer class="foot">
     <span data-i="data">Daten von der Deutschen Bahn, Transitous und OpenStreetMap.</span>
     <span data-i="notdb">Kein Angebot der Deutschen Bahn.</span>
     <a href="https://github.com/taynotfound/navi/blob/main/AI-DECLARATION.md" data-i="ai">Wie KI hier mitgeholfen hat</a>
   </footer>
-</main>
+</div>
 
-<template id="paper-en">
-  <h2 id="notice">Passenger information</h2>
-  <p class="valid">Valid from now on</p>
-  <p>Hi,</p>
-  <p>I'm tay and I built Navi because the other apps annoyed me. Ads here, a login there, and somebody always wants to know where I am. Navi does the important stuff and otherwise leaves you alone.</p>
-  <ul>
-    <li>Live departures with delays and platform changes. For every ICE and every village bus.</li>
-    <li>Journey search, without stairs if you need that.</li>
-    <li>You see whether the station lift works before you're standing in front of it.</li>
-    <li>On the way, Navi only shows what's next. Change at Fulda, platform 3 to 5, 8 minutes. Done.</li>
-    <li>Share a trip: send a link, and whoever's waiting sees live when you'll arrive. No app needed.</li>
-    <li>Or just ask: “When's the next bus to the station?”</li>
-  </ul>
-  <p>Navi is free and open source. If it helps you, you can buy me a coffee on <a href="https://ko-fi.com/taygotkofi" rel="noopener">Ko-fi</a>. No pressure though.</p>
-  <p class="sig">Safe travels!<br>tay</p>
+<template id="letter-en">
+  <div class="intro">
+    <h2 id="hi">Hi, I'm tay.</h2>
+    <p>I built Navi because the other apps annoyed me. Ads here, a login there, and somebody always wants to know where I am.</p>
+    <p>Navi is free and open source. If it helps you, you can buy me a coffee on <a href="https://ko-fi.com/taygotkofi" rel="noopener">Ko-fi</a>. No pressure though.</p>
+    <p class="sig">Safe travels!</p>
+  </div>
+  <ol class="ride">
+    <li><b>Live departures</b><span>With delays and platform changes, for every ICE and every village bus.</span></li>
+    <li><b>Journey search</b><span>With walking directions step by step, and without stairs if you need that.</span></li>
+    <li><b>Station lifts</b><span>You see whether the lift works before you're standing in front of it.</span></li>
+    <li><b>Only what's next</b><span>Change at Fulda, platform 3 to 5, 8 minutes left. Done.</span></li>
+    <li><b>Share a trip</b><span>Send a link, and whoever's waiting sees live when you'll arrive. No app needed.</span></li>
+    <li><b>Just ask</b><span>“When's the next bus to the station?” Ask Navi answers with real departures.</span></li>
+  </ol>
 </template>
 
 <script>
 // local previews talk to a dev server; the published site always uses the real API
 const API = /^(localhost|127\.0\.0\.1|10\.0\.2\.2)$/.test(location.hostname) ? `http://${location.hostname}:8090` : "https://navi-api.taymaerz.de";
 const EN = {
-  served: "Transport modes", say: "Buses and trains all over Germany. Live, and without the nonsense.",
-  dep: "Departures", live: "live", pick: "Choose a stop",
-  apk: "Get the app (APK)", obt: "Via Obtainium", soon: "F-Droid is coming.",
+  h1: "Buses and trains all over Germany. Live.",
+  say: "Every departure, every delay, every platform change. From the ICE to the village bus, without ads and without a login.",
+  pick: "Choose a stop", apk: "Get the app (APK)", obt: "Via Obtainium", soon: "F-Droid is coming.",
   data: "Data from Deutsche Bahn, Transitous and OpenStreetMap.", notdb: "Not affiliated with Deutsche Bahn.", ai: "How AI helped here",
   onTime: "on time", cancelled: "cancelled", empty: "Nothing leaves here in the next 90 minutes. Time for a coffee.",
-  offline: "Can't reach the live data right now. Probably back in a minute.", updated: "As of", via: "via"
+  offline: "Can't reach the live data right now. Probably back in a minute.", updated: "Live, as of", via: "via",
+  light: "Light design", dark: "Dark design"
 };
-const DE = {}; document.querySelectorAll("[data-i]").forEach(e => DE[e.dataset.i] = e.innerHTML);
+const DE = {};
+document.querySelectorAll("[data-i]").forEach(e => DE[e.dataset.i] = e.innerHTML);
 document.querySelectorAll("[data-i-aria]").forEach(e => DE[e.dataset.iAria] = e.getAttribute("aria-label"));
 Object.assign(DE, { onTime: "pünktlich", cancelled: "fällt aus", empty: "In den nächsten 90 Minuten fährt hier nichts. Zeit für einen Kaffee.",
-  offline: "Die Live-Daten sind gerade nicht erreichbar. Gleich nochmal probieren.", updated: "Stand", via: "über" });
-const paperDE = document.getElementById("paper").innerHTML;
-const paperEN = document.getElementById("paper-en").innerHTML;
+  offline: "Die Live-Daten sind gerade nicht erreichbar. Gleich nochmal probieren.", updated: "Live, Stand", via: "über",
+  light: "Helles Design", dark: "Dunkles Design" });
+const letter = document.querySelector(".letter");
+const letterDE = letter.innerHTML, letterEN = document.getElementById("letter-en").innerHTML;
 
 let lang = "de";
 try { lang = localStorage.getItem("lang") || (/^de\b/i.test(navigator.language) ? "de" : "en"); } catch (e) {}
@@ -131,65 +159,74 @@ function applyLang() {
   document.documentElement.lang = lang;
   document.querySelectorAll("[data-i]").forEach(e => { e.innerHTML = T(e.dataset.i); });
   document.querySelectorAll("[data-i-aria]").forEach(e => e.setAttribute("aria-label", T(e.dataset.iAria)));
-  document.getElementById("paper").innerHTML = lang === "en" ? paperEN : paperDE;
-  document.getElementById("lang").textContent = lang === "en" ? "DE" : "EN";
-  document.getElementById("lang").setAttribute("aria-label", lang === "en" ? "Auf Deutsch lesen" : "Read in English");
+  letter.innerHTML = lang === "en" ? letterEN : letterDE;
+  const b = document.getElementById("lang");
+  b.textContent = lang === "en" ? "DE" : "EN";
+  b.setAttribute("aria-label", lang === "en" ? "Auf Deutsch lesen" : "Read in English");
 }
 
 const MODE = { HIGHSPEED_RAIL: "m-long", LONG_DISTANCE: "m-long", NIGHT_RAIL: "m-long", REGIONAL_FAST_RAIL: "m-reg", REGIONAL_RAIL: "m-reg", RAIL: "m-reg",
   SUBURBAN: "m-s", SUBWAY: "m-u", METRO: "m-u", TRAM: "m-tram", BUS: "m-bus", COACH: "m-bus", FERRY: "m-ferry" };
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const hhmm = s => s ? new Date(s).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "–";
-const clock = () => document.getElementById("clock").textContent = new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+const hhmm = s => s ? new Date(s).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "";
+const clock = () => document.getElementById("clock").textContent = hhmm(new Date().toISOString());
 clock(); setInterval(clock, 15000);
 
-let current = { id: "de-DELFI_de:03152:33817", name: "Göttingen" };
-let lastRows = null;
+const buttons = [...document.querySelectorAll("#strip button")];
+let current = buttons[0].dataset.stop, lastRows = null;
+
+// the amber part of the strip runs up to the chosen stop, like the part of a ride that's behind you
+function syncStrip() {
+  const i = buttons.findIndex(b => b.dataset.stop === current);
+  buttons.forEach((b, j) => b.querySelector(".dot").classList.toggle("passed", j < i));
+  const strip = document.getElementById("strip"), dot = buttons[i].querySelector(".dot");
+  const x = dot.getBoundingClientRect().left - strip.getBoundingClientRect().left;
+  document.getElementById("fill").style.width = Math.max(0, x) + "px";
+}
 
 function row(r, i) {
   const late = r.delay != null && r.delay > 0;
   const status = r.cancelled ? `<small class="bad">${T("cancelled")}</small>`
     : r.delay == null ? "" : late ? `<small class="${r.delay < 5 ? "late" : "bad"}">+${r.delay}</small>` : `<small class="ok">${T("onTime")}</small>`;
-  const color = r.color && r.color.toLowerCase() !== "ffffff" ? ` style="background:#${esc(r.color)}"` : "";
+  const color = r.color && /^[0-9a-f]{6}$/i.test(r.color) && r.color.toLowerCase() !== "ffffff" ? ` style="background:#${r.color}"` : "";
   const changed = r.platform && r.scheduledPlatform && r.platform !== r.scheduledPlatform;
   const via = r.via && r.via.length ? `<small>${T("via")} ${esc(r.via.slice(0, 3).join(", "))}</small>` : "";
   return `<li class="dep${r.cancelled ? " cancelled" : ""}" style="--i:${i}">
     <span class="t">${hhmm(r.scheduledTime)}${status}</span>
-    <span class="ln ${MODE[r.mode] || "m-other"}"${color}>${esc(r.line)}</span>
-    <span class="to">${esc(r.headsign || "–")}${via}</span>
+    <span class="ln ${MODE[r.mode] || ""}"${color}>${esc(r.line)}</span>
+    <span class="to">${esc(r.headsign || "")}${via}</span>
     <span class="pl${changed ? " changed" : ""}">${esc(r.platform || "")}</span></li>`;
 }
-
 function renderBoard(rows) {
   const now = Date.now() - 60000;
   const next = rows.filter(r => new Date(r.time).getTime() >= now).slice(0, 7);
-  document.getElementById("board").innerHTML = next.length ? next.map(row).join("") : `<li class="dep">${T("empty")}</li>`;
+  document.getElementById("board").innerHTML = next.length ? next.map(row).join("") : `<li class="dep empty">${T("empty")}</li>`;
 }
-
 async function loadBoard() {
   const note = document.getElementById("note");
   try {
-    const r = await fetch(`${API}/v1/board?stop=${encodeURIComponent(current.id)}`);
+    const r = await fetch(`${API}/v1/board?stop=${encodeURIComponent(current)}`);
     if (!r.ok) throw new Error(r.status);
     const d = await r.json();
     lastRows = d.rows;
     renderBoard(d.rows);
-    document.getElementById("live").hidden = false;
-    note.textContent = `${T("updated")} ${hhmm(new Date().toISOString())}`;
+    note.innerHTML = `<i class="live-dot"></i>${T("updated")} ${hhmm(new Date().toISOString())}`;
   } catch (e) {
-    document.getElementById("live").hidden = true;
     if (!lastRows) document.getElementById("board").innerHTML = "";
     note.textContent = T("offline");
   }
 }
 
-document.querySelectorAll(".stops button").forEach(b => b.addEventListener("click", () => {
-  document.querySelectorAll(".stops button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
-  current = { id: b.dataset.stop, name: b.textContent };
-  document.getElementById("stopname").textContent = current.name;
+buttons.forEach(b => b.addEventListener("click", () => {
+  buttons.forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  current = b.dataset.stop;
+  document.getElementById("stopname").textContent = b.textContent;
   lastRows = null;
+  syncStrip();
   loadBoard();
 }));
+addEventListener("resize", syncStrip);
+
 document.getElementById("lang").addEventListener("click", () => {
   lang = lang === "en" ? "de" : "en";
   try { localStorage.setItem("lang", lang); } catch (e) {}
@@ -200,13 +237,13 @@ document.getElementById("lang").addEventListener("click", () => {
 
 // dark is the default; light is opt-in and remembered
 const themeBtn = document.getElementById("theme");
-const SUN = themeBtn.innerHTML;
+const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>';
 const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>';
 function syncTheme() {
   const light = document.documentElement.dataset.theme === "light";
   themeBtn.innerHTML = light ? MOON : SUN;
-  themeBtn.setAttribute("aria-label", light ? (lang === "en" ? "Dark design" : "Dunkles Design") : (lang === "en" ? "Light design" : "Helles Design"));
-  document.querySelector('meta[name="theme-color"]').content = light ? "#f6faf8" : "#0a0f0e";
+  themeBtn.setAttribute("aria-label", T(light ? "dark" : "light"));
+  document.querySelector('meta[name="theme-color"]').content = light ? "#f9f9fe" : "#0c0e12";
 }
 themeBtn.addEventListener("click", () => {
   const light = document.documentElement.dataset.theme !== "light";
@@ -217,6 +254,7 @@ themeBtn.addEventListener("click", () => {
 
 applyLang();
 syncTheme();
+syncStrip();
 loadBoard();
 setInterval(() => { if (!document.hidden) loadBoard(); }, 45000);
 </script>

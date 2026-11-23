@@ -3,109 +3,148 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0a0f0e">
+<meta name="theme-color" content="#0c0e12">
 <meta name="robots" content="noindex">
 <title>Navi: Geteilte Fahrt</title>
 <script>try{if(localStorage.getItem("theme")==="light")document.documentElement.dataset.theme="light"}catch(e){}</script>
-<link rel="icon" href="../favicon.png">
-<link rel="preload" href="../fonts/dinish.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="../logo.svg" type="image/svg+xml">
+<link rel="icon" href="../favicon.png" sizes="64x64">
+<link rel="preload" href="../fonts/atkinson-next.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../style.css">
 <style>
-  .stop { --dot: 24px; }
-  .title { margin: 0; font: 800 clamp(36px, 7vw, 68px)/.95 var(--din); font-stretch: 82%; letter-spacing: -.01em; text-wrap: balance; }
-  .when { margin: 14px 0 0; font-size: 19px; font-weight: 500; }
-  .now { margin-top: 22px; padding: 20px 22px; border-radius: 24px 24px 24px 8px; background: var(--live-plate); color: var(--live-plate-ink); }
-  .now b { display: block; font: 800 clamp(22px, 3.4vw, 30px)/1.2 var(--din); }
-  .now span { display: block; margin-top: 4px; font-size: 18px; font-weight: 500; }
-  .now.bad { background: var(--bad); color: #2b0000; }
-  .meta { display: flex; align-items: center; gap: 12px; margin: 14px 0 0; color: var(--ink-2); font-size: 15px; min-height: 1.5em; }
+  main { max-width: 720px; }
+  .title { margin: 20px 0 0; font-size: clamp(26px, 4.4vw, 36px); line-height: 1.15; font-weight: 800; letter-spacing: -.015em; text-wrap: balance; }
+  .title .arrow { color: var(--ink-2); font-weight: 400; }
+  .when { margin: 6px 0 24px; color: var(--ink-2); }
+  .now-t { margin: 0; font-size: clamp(26px, 4.6vw, 34px); line-height: 1.15; font-weight: 800; color: #ebbf89; }
+  .now-t.bad { color: #ff9993; }
+  .now-s { margin: 6px 0 0; font-size: 19px; }
+  .bar { position: relative; height: 23px; margin: 22px 11px 0; }
+  .bar .track, .bar .seg, .bar .done { position: absolute; top: 9px; height: 5px; border-radius: 3px; }
+  .bar .track { left: 0; right: 0; background: var(--track); }
+  .bar .done { left: 0; background: #ebbf89; }
+  .bar .dot { position: absolute; top: 0; margin-left: -11.5px; }
+  .ends { display: flex; justify-content: space-between; margin-top: 8px; font-size: 14px; font-weight: 700; color: var(--glass-dim); }
+  .ends .mid { display: flex; align-items: center; gap: 6px; font-weight: 400; }
 
-  .route { list-style: none; margin: 40px 0 0; padding: 0; }
-  .route > li { position: relative; }
-  /* the pole takes the line's colour while you ride it */
-  .leg::before { content: ""; position: absolute; left: calc(-1 * var(--dot) - 6px); top: 26px; bottom: 26px; width: 12px; border-radius: 6px; background: var(--c, var(--teal)); }
-  .walk { padding: 14px 0; color: var(--ink-2); font-size: 16px; }
-  .pt { position: relative; display: grid; grid-template-columns: 70px 1fr auto; gap: 14px; align-items: baseline; padding: 12px 0; }
-  .pt::before { content: ""; position: absolute; left: calc(-1 * var(--dot) - 11px); top: 16px; width: 22px; height: 22px; border-radius: 50%; background: var(--ground); border: 5px solid var(--c, var(--teal)); }
-  .pt .t { font: 800 22px/1 var(--din); font-stretch: 110%; }
-  .pt .t small { display: block; margin-top: 4px; font: 700 13px/1 var(--din); font-stretch: 100%; }
-  .pt .n { font-weight: 700; font-size: 20px; line-height: 1.2; }
-  .pt .pl { font: 800 16px/1 var(--din); padding: 7px 8px; border-radius: 8px; background: var(--surface-hi); }
-  .pt .pl.changed { background: var(--live-plate); color: var(--live-plate-ink); }
-  .ride { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 6px 0 6px 84px; }
-  .ride .ln { font: 700 15px/1 var(--din); padding: 7px 9px 6px; border-radius: 8px; color: #fff; }
-  .ride .hs { font-weight: 700; }
-  .ride details { width: 100%; color: var(--ink-2); font-size: 16px; }
-  .ride summary { cursor: pointer; padding: 4px 0; width: max-content; }
-  .ride details ol { list-style: none; margin: 6px 0 0; padding: 0; }
-  .ride details li { display: grid; grid-template-columns: 56px 1fr; gap: 8px; padding: 3px 0; }
-  .alert { margin: 6px 0 0 84px; padding: 10px 14px; border-radius: 14px; background: var(--surface-hi); font-size: 15px; }
-  .passed { opacity: .45; }
-  .next::before { background: var(--live) !important; border-color: var(--live) !important; box-shadow: 0 0 0 7px color-mix(in srgb, var(--live) 25%, transparent); }
-  .next .n::after { content: attr(data-next); display: block; font: 700 14px/1.4 var(--din); color: var(--live); }
+  /* the vertical route: one pole per ride in its line colour */
+  .route { list-style: none; margin: 36px 0 0; padding: 0; }
+  .leg { position: relative; padding-left: 40px; }
+  .leg::before { content: ""; position: absolute; left: 9px; top: 26px; bottom: 26px; width: 5px; border-radius: 3px; background: var(--c); }
+  .pt { position: relative; display: grid; grid-template-columns: 58px 1fr auto; gap: 12px; align-items: baseline; padding: 12px 0; }
+  .pt::before { content: ""; position: absolute; left: -40px; top: 13px; width: 23px; height: 23px; border-radius: 50%; box-sizing: border-box; background: var(--ground); border: 4px solid var(--c); }
+  .pt.passed::before { background: var(--amber); border-color: var(--amber); }
+  .pt.next::before { border-color: var(--next); transform: scale(1.18); }
+  .pt.passed { color: var(--ink-2); }
+  .pt .t { font-weight: 800; font-size: 19px; line-height: 1.2; }
+  .pt .t small { display: block; font-size: 13px; font-weight: 700; }
+  .pt .n { font-weight: 700; font-size: 18px; line-height: 1.3; }
+  .pt.next .n::after { content: attr(data-next); display: block; font-size: 14px; color: var(--next); }
+  .pl { font-weight: 800; font-size: 15px; padding: 4px 8px; border-radius: 8px; background: var(--raised); white-space: nowrap; }
+  .pl.changed { background: var(--amber); color: var(--on-amber); }
   .cancel .t, .cancel .n { text-decoration: line-through; }
-  .msg { margin-top: 40px; font-size: 20px; color: var(--ink-2); max-width: 40ch; }
-  .cta { margin-top: 64px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; color: var(--ink-2); }
-  @media (max-width: 720px) {
-    .stop { --dot: 16px; }
-    .pt { grid-template-columns: 58px 1fr auto; gap: 10px; }
-    .ride { padding-left: 68px; }
-    .alert { margin-left: 68px; }
+  .ride { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 4px 0 4px 70px; }
+  .ride .hs { font-weight: 700; }
+  .ride .op { width: 100%; color: var(--ink-2); font-size: 15px; }
+  details { width: 100%; color: var(--ink-2); font-size: 16px; }
+  summary { cursor: pointer; padding: 6px 0; width: max-content; color: var(--amber); font-weight: 700; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: " +"; }
+  details[open] summary::after { content: " –"; }
+  .stops { list-style: none; margin: 4px 0 6px; padding: 0; }
+  .stops li { display: grid; grid-template-columns: 52px 1fr; gap: 8px; padding: 3px 0; }
+  .alert { margin: 6px 0 0 70px; padding: 10px 14px; border-radius: 14px; background: var(--raised); font-size: 15px; }
+
+  .walk { padding: 10px 0 10px 40px; color: var(--ink-2); }
+  .walk details { margin-top: 2px; }
+  .steps { list-style: none; margin: 6px 0 4px; padding: 0; }
+  .steps li { display: grid; grid-template-columns: 30px 1fr auto; gap: 12px; align-items: center; padding: 5px 0; color: var(--ink); }
+  .steps svg { width: 30px; height: 30px; padding: 6px; border-radius: 50%; background: var(--raised); }
+  .steps .m { color: var(--ink-2); font-size: 14px; }
+
+  .msg { margin-top: 32px; font-size: 20px; color: var(--ink-2); max-width: 40ch; }
+  .cta { margin-top: 56px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; color: var(--ink-2); }
+  @media (max-width: 600px) {
+    .pt { grid-template-columns: 52px 1fr auto; gap: 10px; }
+    .ride, .alert { padding-left: 62px; margin-left: 0; }
+    .alert { margin-left: 62px; padding-left: 14px; }
   }
 </style>
 </head>
 <body>
-<main class="stop">
-  <a class="disc" href="../" aria-label="Navi"><img src="../logo.png" alt="" width="70" height="70"></a>
-  <div class="topbar"><button class="chip-btn theme-btn" id="theme" type="button" aria-label="Helles Design"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg></button>
-    <button class="chip-btn" id="lang" type="button">EN</button></div>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="../"><img src="../logo.svg" alt="" width="40" height="40">Navi</a>
+    <button class="icon-btn" id="theme" type="button" aria-label="Helles Design"></button>
+    <button class="text-btn" id="lang" type="button">EN</button>
+  </header>
 
-  <section class="mounted">
-    <div class="plate">
-      <h1 class="title" id="title">…</h1>
-      <p class="when" id="when"></p>
+  <main>
+    <h1 class="title" id="title">…</h1>
+    <p class="when" id="when"></p>
+    <section class="display" id="now" hidden aria-live="polite">
+      <p class="now-t" id="nowT"></p>
+      <p class="now-s" id="nowS"></p>
+      <div class="bar" id="bar"></div>
+      <div class="ends"><span id="t0"></span><span class="mid" id="meta"></span><span id="t1"></span></div>
+    </section>
+    <ol class="route" id="route"></ol>
+    <p class="msg" id="msg"></p>
+    <div class="cta">
+      <a class="btn btn-main" href="../" id="ctaBtn">Navi</a>
+      <span id="ctaText"></span>
     </div>
-    <div class="now" id="now" hidden><b id="nowT"></b><span id="nowS"></span></div>
-    <p class="meta" id="meta" aria-live="polite"></p>
-  </section>
-
-  <ol class="route" id="route"></ol>
-  <p class="msg" id="msg"></p>
-
-  <div class="cta">
-    <a class="btn btn-main" href="../" id="ctaBtn">Navi</a>
-    <span id="ctaText"></span>
-  </div>
-</main>
+  </main>
+  <footer class="foot"><span id="foot"></span></footer>
+</div>
 
 <script>
 // local previews talk to a dev server; the published site always uses the real API
 const API = /^(localhost|127\.0\.0\.1|10\.0\.2\.2)$/.test(location.hostname) ? `http://${location.hostname}:8090` : "https://navi-api.taymaerz.de";
 const L = {
   de: { loading: "Fahrt wird geladen …", notFound: "Den Link gibt’s nicht (mehr). Geteilte Fahrten halten 7 Tage.", error: "Die Live-Daten hängen gerade. Navi probiert’s gleich nochmal.",
-    updated: "Live · Stand", walk: "Min. Fußweg", change: "Umstieg", cancelled: "fällt aus", onTime: "pünktlich", platform: "Gl.",
+    updated: "Live, Stand", walk: "Fußweg", change: "Umstieg zu Fuß", cancelled: "fällt aus", onTime: "pünktlich", platform: "Gl.",
     leaves: m => `Abfahrt in ${m} Min.`, leavesAt: t => `Abfahrt um ${t}`, board: (l, s, p) => `${l} ab ${s}${p ? `, Gleis ${p}` : ""}`,
-    riding: (l, h) => `Im ${l} Richtung ${h}`, getOff: (s, t, m) => `Aussteigen in ${s} um ${t} (in ${m} Min.)`,
-    changeAt: (s, m) => `Umstieg in ${s} · noch ${m} Min.`, arrived: "Angekommen. Schön, dass du da bist.", partCancelled: "Ein Teil der Fahrt fällt aus. Das wird wohl nichts mit pünktlich.",
-    stops: n => `${n} Zwischenhalt${n === 1 ? "" : "e"}`, next: "nächster Halt", cta: "Willst du das auch? Navi gibt’s kostenlos.", get: "Navi holen", shared: "Geteilte Fahrt" },
+    riding: (l, h) => `Im ${l} Richtung ${h}`, getOff: (s, t, m) => `Aussteigen in ${s} um ${t}, in ${m} Min.`,
+    changeAt: (s, m) => `Umsteigen in ${s}, noch ${m} Min.`, arrived: "Angekommen. Schön, dass du da bist.", partCancelled: "Ein Teil der Fahrt fällt aus. Das wird wohl nichts mit pünktlich.",
+    stops: n => `${n} Zwischenhalt${n === 1 ? "" : "e"}`, next: "nächster Halt", cta: "Willst du das auch? Navi gibt’s kostenlos.", get: "Navi holen", shared: "Geteilte Fahrt",
+    dirs: "Wegbeschreibung", min: "Min.", data: "Daten von der Deutschen Bahn, Transitous und OpenStreetMap.",
+    step: { START: s => s ? `Los geht’s auf ${s}` : "Los geht’s", STRAIGHT: s => s ? `Weiter auf ${s}` : "Weiter geradeaus", LEFT: s => s ? `Links in ${s}` : "Links abbiegen",
+      RIGHT: s => s ? `Rechts in ${s}` : "Rechts abbiegen", STAIRS: () => "Treppe nehmen", ELEVATOR: () => "Aufzug nehmen", ESCALATOR: () => "Rolltreppe nehmen" },
+    light: "Helles Design", dark: "Dunkles Design" },
   en: { loading: "Loading trip…", notFound: "This link doesn't exist (anymore). Shared trips last 7 days.", error: "Live data is stuck right now. Navi will try again in a bit.",
-    updated: "Live · updated", walk: "min walk", change: "Change", cancelled: "cancelled", onTime: "on time", platform: "Pl.",
+    updated: "Live, as of", walk: "walk", change: "Change on foot", cancelled: "cancelled", onTime: "on time", platform: "Pl.",
     leaves: m => `Leaves in ${m} min`, leavesAt: t => `Leaves at ${t}`, board: (l, s, p) => `${l} from ${s}${p ? `, platform ${p}` : ""}`,
-    riding: (l, h) => `On the ${l} towards ${h}`, getOff: (s, t, m) => `Get off at ${s} at ${t} (in ${m} min)`,
-    changeAt: (s, m) => `Change at ${s} · ${m} min left`, arrived: "Arrived. Welcome!", partCancelled: "Part of this trip is cancelled. On time is not happening.",
-    stops: n => `${n} stop${n === 1 ? "" : "s"}`, next: "next stop", cta: "Want this too? Navi is free.", get: "Get Navi", shared: "Shared trip" }
+    riding: (l, h) => `On the ${l} towards ${h}`, getOff: (s, t, m) => `Get off at ${s} at ${t}, in ${m} min`,
+    changeAt: (s, m) => `Change at ${s}, ${m} min left`, arrived: "Arrived. Welcome!", partCancelled: "Part of this trip is cancelled. On time is not happening.",
+    stops: n => `${n} stop${n === 1 ? "" : "s"}`, next: "next stop", cta: "Want this too? Navi is free.", get: "Get Navi", shared: "Shared trip",
+    dirs: "Directions", min: "min", data: "Data from Deutsche Bahn, Transitous and OpenStreetMap.",
+    step: { START: s => s ? `Head off along ${s}` : "Head off", STRAIGHT: s => s ? `Keep going along ${s}` : "Keep going", LEFT: s => s ? `Turn left onto ${s}` : "Turn left",
+      RIGHT: s => s ? `Turn right onto ${s}` : "Turn right", STAIRS: () => "Take the stairs", ELEVATOR: () => "Take the lift", ESCALATOR: () => "Take the escalator" },
+    light: "Light design", dark: "Dark design" }
 };
+const ICON = {
+  STRAIGHT: '<path d="M12 20V4m0 0-5 5m5-5 5 5"/>',
+  LEFT: '<path d="M17 20v-7a4 4 0 0 0-4-4H6m0 0 4-4M6 9l4 4"/>',
+  RIGHT: '<path d="M7 20v-7a4 4 0 0 1 4-4h7m0 0-4-4m4 4-4 4"/>',
+  STAIRS: '<path d="M4 20h5v-5h5v-5h6"/>',
+  ELEVATOR: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="m9 9 3-3 3 3M9 15l3 3 3-3"/>',
+  ESCALATOR: '<path d="M4 18h4l8-10h4M9 6v.01"/>'
+};
+ICON.START = ICON.STRAIGHT; ICON.SLIGHT_LEFT = ICON.LEFT; ICON.SLIGHT_RIGHT = ICON.RIGHT;
+
 let lang = "de";
 try { lang = localStorage.getItem("lang") || (/^de\b/i.test(navigator.language) ? "de" : "en"); } catch (e) {}
 const T = () => L[lang];
 const MODE = { HIGHSPEED_RAIL: "#b0283a", LONG_DISTANCE: "#b0283a", NIGHT_RAIL: "#b0283a", REGIONAL_FAST_RAIL: "#5b4ba8", REGIONAL_RAIL: "#5b4ba8", RAIL: "#5b4ba8",
   SUBURBAN: "#2e7d32", SUBWAY: "#1565c0", METRO: "#1565c0", TRAM: "#c2410c", BUS: "#7b1fa2", COACH: "#7b1fa2", FERRY: "#00838f" };
 const walkish = l => ["WALK", "BIKE", "CAR"].includes(l.mode);
-const color = l => l.color && l.color.toLowerCase() !== "ffffff" ? "#" + l.color : (MODE[l.mode] || "#546e7a");
+const color = l => l.color && /^[0-9a-f]{6}$/i.test(l.color) && l.color.toLowerCase() !== "ffffff" ? "#" + l.color : (MODE[l.mode] || "#546e7a");
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const loc = () => lang === "en" ? "en-GB" : "de-DE";
-const hhmm = s => s ? new Date(s).toLocaleTimeString(loc(), { hour: "2-digit", minute: "2-digit" }) : "–";
+const hhmm = s => s ? new Date(s).toLocaleTimeString(loc(), { hour: "2-digit", minute: "2-digit" }) : "";
 const mins = (a, b) => Math.round((new Date(a) - new Date(b)) / 60000);
+const metres = m => m >= 1000 ? `${(m / 1000).toLocaleString(loc(), { maximumFractionDigits: 1 })} km` : `${Math.round(m / 10) * 10} m`;
 const id = new URLSearchParams(location.search).get("id") || location.hash.slice(1);
 let data = null;
 
@@ -120,15 +159,16 @@ function plat(p) {
   const ch = p.scheduledPlatform && p.scheduledPlatform !== p.platform;
   return `<span class="pl${ch ? " changed" : ""}">${T().platform} ${esc(p.platform)}</span>`;
 }
+const dep = l => new Date(l.from.departure || l.from.scheduledDeparture).getTime();
+const arr = l => new Date(l.to.arrival || l.to.scheduledArrival).getTime();
 
 function status(it) {
   const now = Date.now(), legs = it.legs.filter(l => !walkish(l));
   if (!legs.length) return null;
-  const dep = l => new Date(l.from.departure || l.from.scheduledDeparture), arr = l => new Date(l.to.arrival || l.to.scheduledArrival);
   const m = t => Math.max(0, Math.round((t - now) / 60000));
   if (now < dep(legs[0])) {
     const f = legs[0], left = m(dep(f));
-    return [left <= 120 ? T().leaves(left) : T().leavesAt(hhmm(f.from.departure)), T().board(f.line || "", f.from.name, f.from.platform)];
+    return [left <= 120 ? T().leaves(left) : T().leavesAt(hhmm(f.from.departure || f.from.scheduledDeparture)), T().board(f.line || "", f.from.name, f.from.platform)];
   }
   for (let i = 0; i < legs.length; i++) {
     const l = legs[i], n = legs[i + 1];
@@ -138,54 +178,89 @@ function status(it) {
   return [T().arrived, legs[legs.length - 1].to.name];
 }
 
+// the same strip as in the app: rides in their colour, what's behind you in amber, the next stop as a blue ring
+function bar(it) {
+  const t0 = dep(it.legs[0]), t1 = arr(it.legs[it.legs.length - 1]), span = Math.max(1, t1 - t0), now = Date.now();
+  const x = t => `${Math.min(100, Math.max(0, (t - t0) / span * 100))}%`;
+  let h = `<span class="track"></span>`;
+  it.legs.forEach(l => { if (!walkish(l)) h += `<span class="seg" style="left:${x(dep(l))};right:calc(100% - ${x(arr(l))});background:${color(l)};opacity:.55"></span>`; });
+  h += `<span class="done" style="width:${x(now)}"></span>`;
+  // dots closer than 3% of the trip (a quick change) would overlap, keep one
+  const pts = [t0, ...it.legs.filter(l => !walkish(l)).flatMap(l => [dep(l), arr(l)]), t1]
+    .filter((t, i, a) => i === a.length - 1 || a[i + 1] - t > span * .03);
+  const next = pts.findIndex(t => t > now);
+  pts.forEach((t, i) => { h += `<i class="dot${t <= now ? " passed" : i === next ? " next" : ""}" style="left:${x(t)}"></i>`; });
+  return h;
+}
+
+function walkRow(l, i, all) {
+  const isChange = i > 0 && i < all.length - 1;
+  const steps = (l.steps || []).filter(s => s.distance > 0 || s.kind === "ELEVATOR");
+  const what = `${isChange ? T().change : T().walk[0].toUpperCase() + T().walk.slice(1)}, ${Math.max(1, Math.round(l.duration / 60))} ${T().min}${l.distance ? `, ${metres(l.distance)}` : ""}`;
+  const list = steps.length > 1 ? `<details><summary>${T().dirs}</summary><ol class="steps">${steps.map(s =>
+    `<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[s.kind] || ICON.STRAIGHT}</svg><span>${esc((T().step[s.kind] || T().step.STRAIGHT)(s.street))}</span><span class="m">${s.distance >= 10 ? metres(s.distance) : ""}</span></li>`).join("")}</ol></details>` : "";
+  return `<li class="walk">${esc(what)}${list}</li>`;
+}
+
 function render() {
   const it = data;
   document.documentElement.lang = lang;
   document.getElementById("lang").textContent = lang === "en" ? "DE" : "EN";
   document.getElementById("ctaText").textContent = T().cta;
   document.getElementById("ctaBtn").textContent = T().get;
+  document.getElementById("foot").textContent = T().data;
+  syncTheme();
   if (!it) return;
-  const first = it.legs[0].from, last = it.legs[it.legs.length - 1].to;
+  // coordinates come back named START/END; name them after the first and last stop instead
+  const rides = it.legs.filter(l => !walkish(l));
+  const first = /^(START|END)$/.test(it.legs[0].from.name) && rides.length ? rides[0].from : it.legs[0].from;
+  const last = /^(START|END)$/.test(it.legs[it.legs.length - 1].to.name) && rides.length ? rides[rides.length - 1].to : it.legs[it.legs.length - 1].to;
   document.title = `Navi: ${first.name} → ${last.name}`;
-  document.getElementById("title").textContent = `${first.name} → ${last.name}`;
-  document.getElementById("when").textContent = `${new Date(it.start).toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long" })} · ${hhmm(it.start)} – ${hhmm(it.end)}`;
+  document.getElementById("title").innerHTML = `${esc(first.name)} <span class="arrow">→</span> ${esc(last.name)}`;
+  document.getElementById("when").textContent = `${new Date(it.start).toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long" })}, ${hhmm(it.start)} – ${hhmm(it.end)}`;
   const cancelled = it.legs.some(l => l.cancelled || l.from.cancelled || l.to.cancelled);
   const st = cancelled ? [T().partCancelled, ""] : status(it);
-  const now = document.getElementById("now");
-  now.hidden = !st; now.classList.toggle("bad", cancelled);
-  if (st) { document.getElementById("nowT").textContent = st[0]; document.getElementById("nowS").textContent = st[1]; }
+  document.getElementById("now").hidden = !st;
+  if (st) {
+    const t = document.getElementById("nowT");
+    t.textContent = st[0]; t.classList.toggle("bad", cancelled);
+    document.getElementById("nowS").textContent = st[1];
+    document.getElementById("bar").innerHTML = bar(it);
+    document.getElementById("t0").textContent = hhmm(it.legs[0].from.departure || it.start);
+    document.getElementById("t1").textContent = hhmm(it.legs[it.legs.length - 1].to.arrival || it.end);
+  }
 
-  // which stop comes next (for passed/next styling)
-  const t = Date.now();
+  const now = Date.now();
   const time = p => new Date(p.departure || p.arrival || p.scheduledDeparture || p.scheduledArrival).getTime();
   let nextMarked = false;
   const cls = p => {
-    if (time(p) < t) return " passed";
+    if (time(p) < now) return " passed";
     if (!nextMarked) { nextMarked = true; return " next"; }
     return "";
   };
   let h = "";
   it.legs.forEach((l, i) => {
-    if (walkish(l)) {
-      if (l.duration >= 60) h += `<li class="walk">${i > 0 && i < it.legs.length - 1 ? T().change + " · " : ""}${Math.round(l.duration / 60)} ${T().walk}</li>`;
-      return;
-    }
+    if (walkish(l)) { if (l.duration >= 60) h += walkRow(l, i, it.legs); return; }
     const c = color(l);
     const stops = (l.stops || []).map(s => `<li><span>${hhmm(s.scheduledDeparture || s.scheduledArrival)}</span><span>${esc(s.name)}</span></li>`).join("");
     h += `<li class="leg" style="--c:${c}">
       <div class="pt${cls(l.from)}${l.from.cancelled ? " cancel" : ""}" data-next="${T().next}"><span class="t">${hhmm(l.from.scheduledDeparture)}${delay(l.from.departure, l.from.scheduledDeparture, l.realtime, l.from.cancelled)}</span><span class="n">${esc(l.from.name)}</span>${plat(l.from)}</div>
       <div class="ride"><span class="ln" style="background:${c}">${esc(l.line || "")}</span><span class="hs">→ ${esc(l.headsign || l.to.name)}</span>
-        ${stops ? `<details><summary>${T().stops(l.stops.length)}</summary><ol>${stops}</ol></details>` : ""}</div>
+        ${l.operator ? `<span class="op">${esc(l.operator)}</span>` : ""}
+        ${stops ? `<details><summary>${T().stops(l.stops.length)}</summary><ol class="stops">${stops}</ol></details>` : ""}</div>
       ${(l.alerts || []).map(a => `<div class="alert">${esc([a.header, a.text].filter(Boolean).join(": "))}</div>`).join("")}
       <div class="pt${cls(l.to)}${l.to.cancelled ? " cancel" : ""}" data-next="${T().next}"><span class="t">${hhmm(l.to.scheduledArrival)}${delay(l.to.arrival, l.to.scheduledArrival, l.realtime, l.to.cancelled)}</span><span class="n">${esc(l.to.name)}</span>${plat(l.to)}</div>
     </li>`;
   });
+  // keep open <details> open across the 30 s refresh
+  const open = [...document.querySelectorAll("#route details")].map(d => d.open);
   document.getElementById("route").innerHTML = h;
+  document.querySelectorAll("#route details").forEach((d, i) => { if (open[i]) d.open = true; });
 }
 
 async function load() {
   const meta = document.getElementById("meta"), msg = document.getElementById("msg");
-  if (!id) { msg.textContent = T().notFound; return false; }
+  if (!id) { msg.textContent = T().notFound; document.getElementById("title").textContent = T().shared; return false; }
   try {
     const r = await fetch(`${API}/v1/share?id=${encodeURIComponent(id)}`);
     if (r.status === 404) { msg.textContent = T().notFound; document.getElementById("title").textContent = T().shared; return false; }
@@ -193,31 +268,22 @@ async function load() {
     data = await r.json();
     msg.textContent = "";
     render();
-    const live = data.legs.some(l => l.realtime);
-    meta.innerHTML = live ? `<span class="live"><i></i>${T().updated} ${hhmm(new Date().toISOString())}</span>` : "";
+    meta.innerHTML = data.legs.some(l => l.realtime) ? `<i class="live-dot"></i>${T().updated} ${hhmm(new Date().toISOString())}` : "";
   } catch (e) {
-    meta.textContent = T().error;
+    if (!data) msg.textContent = T().error; else meta.textContent = T().error;
   }
   return true;
 }
 
-document.getElementById("lang").addEventListener("click", () => {
-  lang = lang === "en" ? "de" : "en";
-  try { localStorage.setItem("lang", lang); } catch (e) {}
-  render(); if (!data) document.getElementById("msg").textContent = "";
-});
-document.getElementById("title").textContent = T().loading;
-render();
-load().then(keep => { if (keep) setInterval(() => { if (!document.hidden) load(); }, 30000); });
 // dark is the default; light is opt-in and remembered
 const themeBtn = document.getElementById("theme");
-const SUN = themeBtn.innerHTML;
+const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>';
 const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>';
 function syncTheme() {
   const light = document.documentElement.dataset.theme === "light";
   themeBtn.innerHTML = light ? MOON : SUN;
-  themeBtn.setAttribute("aria-label", light ? (lang === "en" ? "Dark design" : "Dunkles Design") : (lang === "en" ? "Light design" : "Helles Design"));
-  document.querySelector('meta[name="theme-color"]').content = light ? "#f6faf8" : "#0a0f0e";
+  themeBtn.setAttribute("aria-label", light ? T().dark : T().light);
+  document.querySelector('meta[name="theme-color"]').content = light ? "#f9f9fe" : "#0c0e12";
 }
 themeBtn.addEventListener("click", () => {
   const light = document.documentElement.dataset.theme !== "light";
@@ -225,8 +291,17 @@ themeBtn.addEventListener("click", () => {
   try { localStorage.setItem("theme", light ? "light" : "dark"); } catch (e) {}
   syncTheme();
 });
-syncTheme();
-document.getElementById("lang").addEventListener("click", syncTheme);
+document.getElementById("lang").addEventListener("click", () => {
+  lang = lang === "en" ? "de" : "en";
+  try { localStorage.setItem("lang", lang); } catch (e) {}
+  if (!data) document.getElementById("msg").textContent = "";
+  render();
+});
+
+document.getElementById("title").textContent = T().loading;
+render();
+load().then(keep => { if (keep) setInterval(() => { if (!document.hidden) load(); }, 30000); });
+setInterval(() => { if (data && !document.hidden) render(); }, 15000);
 </script>
 </body>
 </html>

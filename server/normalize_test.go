@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"math"
 	"reflect"
 	"strings"
 	"testing"
@@ -131,4 +132,59 @@ func TestAssistantDailyBudget(t *testing.T) {
 	if !as.take() || !as.take() || as.take() {
 		t.Fatal("daily limit not enforced")
 	}
+}
+
+func TestNearGermany(t *testing.T) {
+	got := nearGermany([]Location{{Name: "SF", Lat: 37.7, Lon: -122.4}, {Name: "Göttingen", Lat: 51.53, Lon: 9.93}})
+	if len(got) != 1 || got[0].Name != "Göttingen" {
+		t.Fatalf("got %+v", got)
+	}
+}
+
+func TestBuildSteps(t *testing.T) {
+	// north along a footpath, then a right turn (east) onto Goßlerstraße, then stairs
+	enc := func(pts ...[2]float64) string { return encodePolyline(pts, 6) }
+	raw := []motisStep{
+		{RelativeDirection: "CONTINUE", Distance: 50},
+		{RelativeDirection: "CONTINUE", Distance: 40},
+		{RelativeDirection: "CONTINUE", Distance: 80, StreetName: "Goßlerstraße"},
+		{RelativeDirection: "STAIRS", Distance: 5},
+	}
+	raw[0].Polyline.Points, raw[0].Polyline.Precision = enc([2]float64{51.5, 9.9}, [2]float64{51.5005, 9.9}), 6
+	raw[1].Polyline.Points, raw[1].Polyline.Precision = enc([2]float64{51.5005, 9.9}, [2]float64{51.5009, 9.9}), 6
+	raw[2].Polyline.Points, raw[2].Polyline.Precision = enc([2]float64{51.5009, 9.9}, [2]float64{51.5009, 9.901}), 6
+	got := BuildSteps(raw)
+	want := []Step{{"START", "", 90}, {"RIGHT", "Goßlerstraße", 80}, {"STAIRS", "", 5}}
+	if len(got) != len(want) {
+		t.Fatalf("got %+v", got)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("step %d: got %+v want %+v", i, got[i], want[i])
+		}
+	}
+}
+
+func encodePolyline(pts [][2]float64, precision int) string {
+	f := math.Pow(10, float64(precision))
+	var b []byte
+	put := func(v int) {
+		u := v << 1
+		if v < 0 {
+			u = ^u
+		}
+		for u >= 0x20 {
+			b = append(b, byte((0x20|(u&0x1f))+63))
+			u >>= 5
+		}
+		b = append(b, byte(u+63))
+	}
+	pl, po := 0, 0
+	for _, p := range pts {
+		la, lo := int(math.Round(p[0]*f)), int(math.Round(p[1]*f))
+		put(la - pl)
+		put(lo - po)
+		pl, po = la, lo
+	}
+	return string(b)
 }

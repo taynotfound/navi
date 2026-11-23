@@ -105,12 +105,24 @@ func (a *App) search(ctx context.Context, q url.Values) (any, error) {
 	return cached(a.cache, "search|"+strings.ToLower(text)+"|"+typ, time.Hour, func() ([]Location, error) {
 		var raw motisGeocode
 		err := a.motis.get(ctx, "/api/v1/geocode", url.Values{"text": {text}, "language": {"de"}, "type": {typ}}, &raw)
-		out := NormalizeGeocode(raw)
+		out := nearGermany(NormalizeGeocode(raw))
 		if len(out) > 15 {
 			out = out[:15]
 		}
 		return out, err
 	})
+}
+
+// nearGermany drops hits far outside Germany (Transitous is worldwide, so "Goettingen" finds San Francisco).
+// The box includes the border regions people commute into.
+func nearGermany(in []Location) []Location {
+	out := in[:0]
+	for _, l := range in {
+		if l.Lat >= 45.5 && l.Lat <= 56 && l.Lon >= 4.5 && l.Lon <= 17 {
+			out = append(out, l)
+		}
+	}
+	return out
 }
 
 func (a *App) nearby(ctx context.Context, q url.Values) (any, error) {

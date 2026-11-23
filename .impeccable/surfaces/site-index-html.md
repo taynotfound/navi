@@ -14,14 +14,14 @@ Action: get the APK (GitHub Releases / Obtainium; F-Droid soon). Proof: a real l
 
 ## Direction contract
 
-THESIS: The site is a stop you walk up to. The sign says where you are, the glass case says what comes next. Refuses the app-landing template (headline, phone mockup, three equal feature cards).
+THESIS: The site is the passenger display above a train door: dark glass, amber text, one line with its stops, the next one ringed in blue. It refuses both the app-landing template and the literal bus-stop costume the previous version wore.
 
-OWN-WORLD: Night-dark ground from the brand tonal palette, flat enamel sign plates in teal container with light DIN lettering, a slim pole, brushed-aluminium-edged glass timetable case, coral only for “live”/changes. DINish (DIN 1451 model) everywhere, condensed for plates, wide for times. M3 Expressive radii on plates and case.
+OWN-WORLD: Blue-graphite ground (#0c0e12), display glass panels (#161a1f) that stay dark in light mode, amber (#ebbf89) for what matters now, blue ring (#b0c8ec) for "next", line colours only on rides. Atkinson Hyperlegible Next throughout, tabular numbers. Route strips (dots on a 5px track) are the only ornament.
 
-STORY: Visitor sees a real stop with real live departures, understands Navi shows every bus and train live, trusts it is free and private, downloads the APK.
+STORY: The visitor reads one plain promise, sees a real live board for a real stop, switches stops along a route strip, then reads tay's short note and the feature list drawn as a ride. Downloads the APK.
 
-FIRST VIEWPORT: Pole down the left edge, round stop disc with the Navi mark at top. Stop-name plate “Navi” huge, subline beneath. Glass case: live Göttingen departures from the API, Download APK as the case’s button, Obtainium secondary.
+FIRST VIEWPORT: Promise headline, APK + Obtainium buttons, the display with live departures and the stop strip.
 
-FORM: candidate 7 of 7 (German bus stop: H disc, pole, timetable case, DIN 1451). seed:29d45522ccaaeae8. Raises: flat layered planes (WPA); trip page stops advance like a line, passed dim, next lit (darkroom).
+FORM: candidate 6 of 7 (in-train "Nächster Halt" passenger display). seed:d0550f69f3313fee. Raise from the split-flap challenger: columns never move, rows are the only thing that changes.
 
-FINISH: unreviewed and undocumented is unfinished; run the reviewer and documenter before reporting done.
+FINISH: reviewer and documenter not run yet in this pass.

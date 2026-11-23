@@ -20,90 +20,94 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.navi.R
 import app.navi.Store
 
-// Generated with Material Color Utilities (SchemeTonalSpot, spec 2025) from the logo's seeds:
-// teal route #1FA39A for primary/secondary/neutrals, coral pin #F0603F for tertiary.
-// TonalSpot keeps surfaces low-chroma, so nothing glares; coral only accents.
+// Generated with Material Color Utilities (SchemeTonalSpot, spec 2025). Neutrals and secondary come from
+// a blue-graphite seed #3D6FA8 (the glass of a train's passenger display), primary from amber #E9A23B
+// (the old LED text), tertiary is the blue seed's primary and marks "next". Low chroma, nothing glares.
 private val Dark = darkColorScheme(
-    primary = Color(0xFF9CD1CA),
-    onPrimary = Color(0xFF0E4844),
-    primaryContainer = Color(0xFF265B56),
-    onPrimaryContainer = Color(0xFFB8EEE7),
-    inversePrimary = Color(0xFF346763),
-    secondary = Color(0xFFB0CCC8),
-    onSecondary = Color(0xFF2C4542),
-    secondaryContainer = Color(0xFF27403D),
-    onSecondaryContainer = Color(0xFFA9C5C1),
+    primary = Color(0xFFEBBF89),
+    onPrimary = Color(0xFF573A10),
+    primaryContainer = Color(0xFF6C4C21),
+    onPrimaryContainer = Color(0xFFFFDEB8),
+    inversePrimary = Color(0xFF7A592C),
+    secondary = Color(0xFFBBC7DB),
+    onSecondary = Color(0xFF354151),
+    secondaryContainer = Color(0xFF313C4C),
+    onSecondaryContainer = Color(0xFFB4C0D4),
+    tertiary = Color(0xFFB0C8EC),
+    onTertiary = Color(0xFF2A415F),
+    tertiaryContainer = Color(0xFF3C5472),
+    onTertiaryContainer = Color(0xFFD4E4FF),
     error = Color(0xFFFA746F),
     onError = Color(0xFF490006),
     errorContainer = Color(0xFF871F21),
     onErrorContainer = Color(0xFFFF9993),
-    background = Color(0xFF0A0F0E),
-    onBackground = Color(0xFFDCE8E5),
-    surface = Color(0xFF0A0F0E),
-    onSurface = Color(0xFFDCE8E5),
-    surfaceVariant = Color(0xFF1D2826),
-    onSurfaceVariant = Color(0xFFA2ADAB),
-    surfaceTint = Color(0xFF9CD1CA),
-    surfaceDim = Color(0xFF0A0F0E),
-    surfaceBright = Color(0xFF242E2D),
+    background = Color(0xFF0C0E12),
+    onBackground = Color(0xFFE2E5EF),
+    surface = Color(0xFF0C0E12),
+    onSurface = Color(0xFFE2E5EF),
+    surfaceVariant = Color(0xFF21262D),
+    onSurfaceVariant = Color(0xFFA7ABB4),
+    surfaceTint = Color(0xFFEBBF89),
+    surfaceDim = Color(0xFF0C0E12),
+    surfaceBright = Color(0xFF282C34),
     surfaceContainerLowest = Color(0xFF000000),
-    surfaceContainerLow = Color(0xFF0E1514),
-    surfaceContainer = Color(0xFF131B1A),
-    surfaceContainerHigh = Color(0xFF192120),
-    surfaceContainerHighest = Color(0xFF1D2826),
-    inverseSurface = Color(0xFFF6FAF8),
-    inverseOnSurface = Color(0xFF515655),
-    outline = Color(0xFF6D7876),
-    outlineVariant = Color(0xFF3F4A48),
+    surfaceContainerLow = Color(0xFF111418),
+    surfaceContainer = Color(0xFF161A1F),
+    surfaceContainerHigh = Color(0xFF1C2026),
+    surfaceContainerHighest = Color(0xFF21262D),
+    inverseSurface = Color(0xFFF9F9FE),
+    inverseOnSurface = Color(0xFF535559),
+    outline = Color(0xFF71767E),
+    outlineVariant = Color(0xFF444850),
     scrim = Color(0xFF000000),
-    tertiary = Color(0xFFF9B7A7),
-    onTertiary = Color(0xFF613429),
-    tertiaryContainer = Color(0xFF76463A),
-    onTertiaryContainer = Color(0xFFFFDBD3),
 )
 
 private val Light = lightColorScheme(
-    primary = Color(0xFF1D6A64),
-    onPrimary = Color(0xFFE1FFFB),
-    primaryContainer = Color(0xFFA8F0E8),
-    onPrimaryContainer = Color(0xFF035C56),
-    inversePrimary = Color(0xFFB3FBF3),
-    secondary = Color(0xFF4A6461),
-    onSecondary = Color(0xFFE2FFFA),
-    secondaryContainer = Color(0xFFCCE8E4),
-    onSecondaryContainer = Color(0xFF3D5654),
+    primary = Color(0xFF7F571E),
+    onPrimary = Color(0xFFFFF7F3),
+    primaryContainer = Color(0xFFFEC884),
+    onPrimaryContainer = Color(0xFF644006),
+    inversePrimary = Color(0xFFFEC884),
+    secondary = Color(0xFF546071),
+    onSecondary = Color(0xFFF8F8FF),
+    secondaryContainer = Color(0xFFD7E3F8),
+    onSecondaryContainer = Color(0xFF475263),
+    tertiary = Color(0xFF406189),
+    onTertiary = Color(0xFFF8F8FF),
+    tertiaryContainer = Color(0xFFA3C3F1),
+    onTertiaryContainer = Color(0xFF1A3E64),
     error = Color(0xFFA83836),
     onError = Color(0xFFFFF7F6),
     errorContainer = Color(0xFFFA746F),
     onErrorContainer = Color(0xFF6E0A12),
-    background = Color(0xFFF6FAF8),
-    onBackground = Color(0xFF2A3433),
-    surface = Color(0xFFF6FAF8),
-    onSurface = Color(0xFF2A3433),
-    surfaceVariant = Color(0xFFD9E5E2),
-    onSurfaceVariant = Color(0xFF566160),
-    surfaceTint = Color(0xFF1D6A64),
-    surfaceDim = Color(0xFFD1DCDA),
-    surfaceBright = Color(0xFFF6FAF8),
+    background = Color(0xFFF9F9FE),
+    onBackground = Color(0xFF2E333A),
+    surface = Color(0xFFF9F9FE),
+    onSurface = Color(0xFF2E333A),
+    surfaceVariant = Color(0xFFDFE2EC),
+    onSurfaceVariant = Color(0xFF5B5F67),
+    surfaceTint = Color(0xFF7F571E),
+    surfaceDim = Color(0xFFD6DAE4),
+    surfaceBright = Color(0xFFF9F9FE),
     surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFEEF5F3),
-    surfaceContainer = Color(0xFFE7F0ED),
-    surfaceContainerHigh = Color(0xFFE1EAE8),
-    surfaceContainerHighest = Color(0xFFD9E5E2),
-    inverseSurface = Color(0xFF0A0F0E),
-    inverseOnSurface = Color(0xFF999E9C),
-    outline = Color(0xFF727D7B),
-    outlineVariant = Color(0xFFA9B4B2),
+    surfaceContainerLow = Color(0xFFF2F3FA),
+    surfaceContainer = Color(0xFFECEEF5),
+    surfaceContainerHigh = Color(0xFFE5E8F0),
+    surfaceContainerHighest = Color(0xFFDFE2EC),
+    inverseSurface = Color(0xFF0C0E12),
+    inverseOnSurface = Color(0xFF9C9DA1),
+    outline = Color(0xFF767B83),
+    outlineVariant = Color(0xFFAEB2BB),
     scrim = Color(0xFF000000),
-    tertiary = Color(0xFF8C4E40),
-    onTertiary = Color(0xFFFFF7F6),
-    tertiaryContainer = Color(0xFFFDAD9B),
-    onTertiaryContainer = Color(0xFF622D20),
 )
 
 private fun naviScheme(dark: Boolean): ColorScheme = if (dark) Dark else Light
@@ -136,20 +140,34 @@ fun NaviTheme(content: @Composable () -> Unit) {
     )
 }
 
-/** Expressive leans on heavier, tighter display and headline type. */
+/** Atkinson Hyperlegible Next everywhere: made for people who struggle to read, which is everyone at a stop in the rain. */
+val Atkinson = FontFamily(
+    Font(R.font.atkinson_400, FontWeight.Normal),
+    Font(R.font.atkinson_500, FontWeight.Medium),
+    Font(R.font.atkinson_700, FontWeight.SemiBold),
+    Font(R.font.atkinson_700, FontWeight.Bold),
+    Font(R.font.atkinson_800, FontWeight.ExtraBold),
+)
+
 private fun expressiveType(): Typography {
     val t = Typography()
-    val tight = (-0.5).sp
-    return t.copy(
-        displayLarge = t.displayLarge.copy(fontWeight = FontWeight.ExtraBold, letterSpacing = tight),
-        displayMedium = t.displayMedium.copy(fontWeight = FontWeight.ExtraBold, letterSpacing = tight),
-        displaySmall = t.displaySmall.copy(fontWeight = FontWeight.ExtraBold, letterSpacing = tight),
-        headlineLarge = t.headlineLarge.copy(fontWeight = FontWeight.ExtraBold, letterSpacing = tight),
-        headlineMedium = t.headlineMedium.copy(fontWeight = FontWeight.ExtraBold, letterSpacing = tight),
-        headlineSmall = t.headlineSmall.copy(fontWeight = FontWeight.Bold),
-        titleLarge = t.titleLarge.copy(fontWeight = FontWeight.Bold),
-        titleMedium = t.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-        labelLarge = t.labelLarge.copy(fontWeight = FontWeight.Bold),
+    fun TextStyle.a(w: FontWeight? = null, ls: Float? = null) = copy(fontFamily = Atkinson, fontWeight = w ?: fontWeight, letterSpacing = ls?.sp ?: letterSpacing)
+    return Typography(
+        displayLarge = t.displayLarge.a(FontWeight.ExtraBold, -0.5f),
+        displayMedium = t.displayMedium.a(FontWeight.ExtraBold, -0.5f),
+        displaySmall = t.displaySmall.a(FontWeight.ExtraBold, -0.25f),
+        headlineLarge = t.headlineLarge.a(FontWeight.ExtraBold, -0.25f),
+        headlineMedium = t.headlineMedium.a(FontWeight.ExtraBold, -0.25f),
+        headlineSmall = t.headlineSmall.a(FontWeight.Bold),
+        titleLarge = t.titleLarge.a(FontWeight.Bold),
+        titleMedium = t.titleMedium.a(FontWeight.SemiBold),
+        titleSmall = t.titleSmall.a(FontWeight.SemiBold),
+        bodyLarge = t.bodyLarge.a(),
+        bodyMedium = t.bodyMedium.a(),
+        bodySmall = t.bodySmall.a(),
+        labelLarge = t.labelLarge.a(FontWeight.Bold),
+        labelMedium = t.labelMedium.a(FontWeight.SemiBold),
+        labelSmall = t.labelSmall.a(FontWeight.SemiBold),
     )
 }
 
@@ -160,6 +178,6 @@ val darkScheme: Boolean
 /** Status colours that stay readable in light and dark mode, independent of the wallpaper palette. */
 object StatusColors {
     val onTime @Composable @ReadOnlyComposable get() = if (darkScheme) Color(0xFF8BD8A0) else Color(0xFF1B7A3A)
-    val late @Composable @ReadOnlyComposable get() = if (darkScheme) Color(0xFFF2C27A) else Color(0xFF8A5B00)
+    val late @Composable @ReadOnlyComposable get() = if (darkScheme) Color(0xFFF5A06E) else Color(0xFF9C4A14)
     val veryLate @Composable @ReadOnlyComposable get() = if (darkScheme) Color(0xFFFFA49A) else Color(0xFFC62828)
 }

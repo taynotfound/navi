@@ -1,4 +1,4 @@
-<p align="center"><img src="site/logo.png" width="120" alt=""></p>
+<p align="center"><img src="brand/logo.svg" width="120" alt=""></p>
 
 # Navi
 

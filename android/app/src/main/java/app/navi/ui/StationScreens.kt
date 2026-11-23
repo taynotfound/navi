@@ -444,7 +444,7 @@ private fun StationContent(st: Station, openUrl: (String) -> Unit) {
                             p.heightCm?.let { stringResource(R.string.height_cm, it) },
                             p.lengthM?.let { stringResource(R.string.length_m, it.toInt()) },
                             when (p.stepFree) { "true" -> stringResource(R.string.step_free_lc); "false" -> stringResource(R.string.not_step_free); else -> null },
-                        ).joinToString(" · "))
+                        ).joinToString(", "))
                     },
                 )
             }

@@ -1,14 +1,14 @@
 name: Build
 
+# Website, server tests and server deploy. The APK has its own workflow (release.yml).
 on:
   push:
     branches: [main]
-    tags: ["v*"]
   pull_request:
   workflow_dispatch:
 
 permissions:
-  contents: write # create releases on tags
+  contents: read
 
 jobs:
   pages:
@@ -49,50 +49,6 @@ jobs:
         with:
           name: navi-server
           path: server/navi-server
-
-  android:
-    runs-on: ubuntu-latest
-    env:
-      # versionCode grows with every build, so every APK can update the previous one
-      VERSION_CODE: ${{ github.run_number }}
-      VERSION_NAME: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('0.1.{0}', github.run_number) }}
-      NAVI_API: ${{ vars.NAVI_API || 'https://navi-api.taymaerz.de' }}
-      HAS_KEY: ${{ secrets.NAVI_KEYSTORE_BASE64 != '' }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-      - name: Install Android platform 37.1
-        # the runner image ships the SDK; add the platform this app compiles against
-        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null; "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.1"
-      - uses: gradle/actions/setup-gradle@v4
-      - name: Decode signing key
-        if: env.HAS_KEY == 'true'
-        run: echo "${{ secrets.NAVI_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/navi.jks"
-      - name: Test and build APK
-        working-directory: android
-        env:
-          NAVI_KEYSTORE: ${{ runner.temp }}/navi.jks
-          NAVI_KEYSTORE_PASSWORD: ${{ secrets.NAVI_KEYSTORE_PASSWORD }}
-          NAVI_KEY_ALIAS: ${{ secrets.NAVI_KEY_ALIAS }}
-          NAVI_KEY_PASSWORD: ${{ secrets.NAVI_KEY_PASSWORD }}
-        run: >
-          ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleRelease
-          -PnaviApi="$NAVI_API" -PversionCode="$VERSION_CODE" -PversionName="$VERSION_NAME"
-      - name: Name APK
-        run: mv android/app/build/outputs/apk/release/app-release*.apk "navi-$VERSION_NAME.apk"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: navi-apk
-          path: navi-*.apk
-      - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: navi-*.apk
-          generate_release_notes: true
 
   deploy-server:
     # pushes to main go live on the Pelican panel (needs the PELICAN_API_KEY secret)

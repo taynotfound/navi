@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -123,7 +125,7 @@ private fun PlacePickerContent(
         }
     }
 
-    Column(Modifier.fillMaxSize().padding(top = 8.dp).imePadding()) {
+    Column(Modifier.fillMaxSize().statusBarsPadding().padding(top = 8.dp).imePadding()) {
         TextField(
             value = query,
             onValueChange = { query = it },
@@ -147,7 +149,7 @@ private fun PlacePickerContent(
             ),
             shape = MaterialTheme.shapes.extraLarge,
         )
-        LazyColumn(Modifier.fillMaxSize()) {
+        LazyColumn(Modifier.fillMaxSize().navigationBarsPadding()) {
             if (error != null) item { Text(error!!, Modifier.padding(20.dp), color = MaterialTheme.colorScheme.error) }
             if (query.trim().length < 2) {
                 if (allowMyLocation) item {
@@ -194,7 +196,7 @@ fun PlaceRow(loc: Location, icon: androidx.compose.ui.graphics.vector.ImageVecto
                 when (loc.type) { "ADDRESS" -> stringResource(R.string.address); "PLACE" -> stringResource(R.string.place); else -> null },
                 loc.distance?.let { "$it m" },
             )
-            if (parts.isNotEmpty()) Text(parts.joinToString(" · "))
+            if (parts.isNotEmpty()) Text(parts.joinToString(", "))
         },
         leadingContent = {
             Icon(

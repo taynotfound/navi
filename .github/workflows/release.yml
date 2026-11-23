@@ -1,0 +1,60 @@
+name: Release APK
+
+# Builds and publishes the APK only when android/version.properties changes on main
+# (or when started by hand). Bump versionCode there to ship a new version.
+on:
+  push:
+    branches: [main]
+    paths: [android/version.properties]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    env:
+      NAVI_API: ${{ vars.NAVI_API || 'https://navi-api.taymaerz.de' }}
+      HAS_KEY: ${{ secrets.NAVI_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read version
+        id: v
+        run: |
+          echo "name=$(grep '^versionName=' android/version.properties | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+          echo "code=$(grep '^versionCode=' android/version.properties | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Install Android platform 37.1
+        # the runner image ships the SDK; add the platform this app compiles against
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null; "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.1"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Decode signing key
+        if: env.HAS_KEY == 'true'
+        run: echo "${{ secrets.NAVI_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/navi.jks"
+      - name: Test and build APK
+        working-directory: android
+        env:
+          NAVI_KEYSTORE: ${{ runner.temp }}/navi.jks
+          NAVI_KEYSTORE_PASSWORD: ${{ secrets.NAVI_KEYSTORE_PASSWORD }}
+          NAVI_KEY_ALIAS: ${{ secrets.NAVI_KEY_ALIAS }}
+          NAVI_KEY_PASSWORD: ${{ secrets.NAVI_KEY_PASSWORD }}
+        run: ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleRelease -PnaviApi="$NAVI_API"
+      - name: Name APK
+        run: mv android/app/build/outputs/apk/release/app-release*.apk "navi-${{ steps.v.outputs.name }}.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: navi-apk
+          path: navi-*.apk
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.v.outputs.name }}
+          target_commitish: ${{ github.sha }}
+          name: Navi ${{ steps.v.outputs.name }}
+          prerelease: ${{ contains(steps.v.outputs.name, 'beta') || contains(steps.v.outputs.name, 'alpha') }}
+          files: navi-*.apk
+          generate_release_notes: true

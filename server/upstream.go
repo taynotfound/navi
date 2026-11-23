@@ -104,6 +104,7 @@ type Leg struct {
 		Precision int    `json:"precision"`
 	} `json:"geometry"`
 	Alerts []Alert `json:"alerts"`
+	Steps  []Step  `json:"steps,omitempty"` // walking/cycling directions
 }
 
 type Alert struct {
@@ -567,6 +568,7 @@ type motisLeg struct {
 	Duration          int          `json:"duration"`
 	Distance          *float64     `json:"distance"`
 	IntermediateStops []motisPlace `json:"intermediateStops"`
+	Steps             []motisStep  `json:"steps"`
 	LegGeometry       *struct {
 		Points    string `json:"points"`
 		Precision int    `json:"precision"`
@@ -586,6 +588,7 @@ func (l motisLeg) leg() Leg {
 	}
 	if l.Mode == "WALK" || l.Mode == "BIKE" {
 		out.Line = ""
+		out.Steps = BuildSteps(l.Steps)
 	}
 	for _, s := range l.IntermediateStops {
 		out.Stops = append(out.Stops, s.place())

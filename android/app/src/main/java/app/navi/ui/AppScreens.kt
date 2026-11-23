@@ -166,7 +166,7 @@ private fun SavedTripCard(t: SavedTrip, nav: Nav) {
                 )
                 Text("${t.from} → ${t.to}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(
-                    "${hhmm(it.start)} – ${hhmm(it.end)} · ${transfersText(it.transfers)}" + if (past) " · " + stringResource(R.string.past) else "",
+                    "${hhmm(it.start)} – ${hhmm(it.end)}, ${transfersText(it.transfers)}" + if (past) ", " + stringResource(R.string.past) else "",
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (cancelled) Text(stringResource(R.string.part_cancelled), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
@@ -367,10 +367,7 @@ fun Onboarding(onDone: () -> Unit) {
                 Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 40.dp)) {
                     when (s) {
                         0 -> {
-                            Box(Modifier.size(168.dp), contentAlignment = Alignment.Center) {
-                                Box(Modifier.fillMaxSize().clip(MaterialShapes.Cookie12Sided.toShape()).background(MaterialTheme.colorScheme.primaryContainer))
-                                androidx.compose.foundation.Image(painterResource(R.drawable.logo), null, Modifier.size(112.dp))
-                            }
+                            androidx.compose.foundation.Image(painterResource(R.drawable.logo), null, Modifier.size(132.dp))
                             Spacer(Modifier.height(36.dp))
                             SetupTitle(stringResource(R.string.welcome_title), stringResource(R.string.welcome_text))
                             Spacer(Modifier.height(32.dp))
