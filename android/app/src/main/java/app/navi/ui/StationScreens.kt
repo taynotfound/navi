@@ -268,6 +268,7 @@ private fun DepartureRow(r: BoardRow, arrivals: Boolean, onClick: () -> Unit) {
                 maxLines = 2, overflow = TextOverflow.Ellipsis,
             )
             if (r.via.isNotEmpty()) Text(stringResource(R.string.via, r.via.joinToString(", ")), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (!r.realtime) UsualDelayLine(r.usual, Modifier.padding(top = 2.dp))
             r.notes.minByOrNull { it.length }?.let {
                 Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.Top) {
                     Icon(Icons.Filled.Warning, null, Modifier.size(14.dp).padding(top = 2.dp), tint = MaterialTheme.colorScheme.tertiary)
@@ -361,6 +362,10 @@ fun TripScreen(id: String, nav: Nav, on: String? = null, off: String? = null) {
                             ReasonList(all2)
                             if (attrs.isNotEmpty()) Text(attrs.joinToString(", "), Modifier.padding(top = 6.dp), style = MaterialTheme.typography.bodySmall, color = c.onSurfaceVariant)
                         }
+                    }
+                    l.line?.let { ln ->
+                        item { PunctualitySection(ln, l.operator, on) }
+                        item { SpotterPhotos(ln, l.operator, l.mode) }
                     }
                     items(all.size) { i ->
                         val p = all[i]

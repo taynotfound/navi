@@ -58,7 +58,7 @@ object Store {
         recentJourneys = read("recentJourneys", journeys)
         // trips are kept until a day after arrival
         val cutoff = ZonedDateTime.now().minusDays(1)
-        savedTrips = read("savedTrips", trips).filter { (parseTime(it.itinerary.end) ?: cutoff) >= cutoff }
+        savedTrips = read("savedTrips", trips).filter { it.itinerary.legs.isNotEmpty() && (parseTime(it.itinerary.end) ?: cutoff) >= cutoff }.distinctBy { it.key }
         theme = prefs.getString("theme", "dark")!!
         dynamicColor = prefs.getBoolean("dynamicColor", false)
         onboarded = prefs.getBoolean("onboarded", false)
@@ -120,10 +120,18 @@ object Store {
     }
 
     /** Keep a saved trip's live data so it shows the latest state offline. */
-    fun updateSaved(it: Itinerary) {
-        val key = tripKey(it)
+    /** Live data moves the start time, which is part of the key: update by the key the trip was saved under. */
+    fun updateSaved(key: String, it: Itinerary) {
         if (savedTrips.none { t -> t.key == key }) return
         savedTrips = savedTrips.map { t -> if (t.key == key) t.copy(itinerary = it) else t }
+        write("savedTrips", trips, savedTrips)
+    }
+
+    fun isSavedKey(key: String) = savedTrips.any { t -> t.key == key }
+
+    fun toggleSavedKey(key: String, it: Itinerary, from: String, to: String) {
+        savedTrips = if (isSavedKey(key)) savedTrips.filterNot { t -> t.key == key }
+        else (savedTrips + SavedTrip(key, from, to, it, System.currentTimeMillis())).sortedBy { t -> parseTime(t.itinerary.start) }
         write("savedTrips", trips, savedTrips)
     }
 
@@ -142,6 +150,7 @@ object JourneyForm {
     var arriveBy by mutableStateOf(false)
     var wheelchair by mutableStateOf(false)
     var bike by mutableStateOf(false)
+    var modes by mutableStateOf<Set<String>>(emptySet()) // type filter: long, regional, suburban, subway, tram, bus, ferry; empty = all
     var selected by mutableStateOf<Itinerary?>(null)
 
     fun swap() { val f = from; from = to; to = f }

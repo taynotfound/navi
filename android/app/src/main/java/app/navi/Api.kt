@@ -226,7 +226,7 @@ object Api {
 
     suspend fun plan(
         from: String, to: String, time: String?, arriveBy: Boolean,
-        wheelchair: Boolean, bike: Boolean, cursor: String? = null,
+        wheelchair: Boolean, bike: Boolean, cursor: String? = null, modes: Set<String> = emptySet(),
     ) = get(
         "/v1/plan",
         mapOf(
@@ -234,6 +234,7 @@ object Api {
             "arriveBy" to if (arriveBy) "1" else null,
             "wheelchair" to if (wheelchair) "1" else null,
             "bike" to if (bike) "1" else null,
+            "modes" to modes.takeIf { it.isNotEmpty() }?.sorted()?.joinToString(","),
         ),
         Plan.serializer(),
     )

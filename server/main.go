@@ -326,7 +326,11 @@ func (a *App) plan(ctx context.Context, q url.Values) (any, error) {
 	}
 	cursor := q.Get("cursor")
 	arriveBy, bike, wheelchair := flag(q, "arriveBy"), flag(q, "bike"), flag(q, "wheelchair")
-	key := fmt.Sprint("plan|", from, "|", to, "|", at.Truncate(time.Minute).Unix(), arriveBy, bike, wheelchair, "|", cursor)
+	modes, err := transitModes(q.Get("modes"))
+	if err != nil {
+		return nil, err
+	}
+	key := fmt.Sprint("plan|", from, "|", to, "|", at.Truncate(time.Minute).Unix(), arriveBy, bike, wheelchair, "|", modes, "|", cursor)
 	return cached(a.cache, key, time.Minute, func() (Plan, error) {
 		params := url.Values{
 			"fromPlace": {from}, "toPlace": {to}, "time": {at.UTC().Format(time.RFC3339)},
@@ -338,6 +342,9 @@ func (a *App) plan(ctx context.Context, q url.Values) (any, error) {
 		}
 		if wheelchair {
 			params.Set("pedestrianProfile", "WHEELCHAIR")
+		}
+		if modes != "" {
+			params.Set("transitModes", modes)
 		}
 		var raw motisPlan
 		if err := a.motis.get(ctx, "/api/v5/plan", params, &raw); err != nil {
@@ -633,4 +640,37 @@ func main() {
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
+}
+
+// modeGroups are the app's type filter ("bus,tram") in MOTIS transit modes.
+var modeGroups = map[string][]string{
+	"long":     {"HIGHSPEED_RAIL", "LONG_DISTANCE", "NIGHT_RAIL"},
+	"regional": {"REGIONAL_FAST_RAIL", "REGIONAL_RAIL"},
+	"suburban": {"SUBURBAN"},
+	"subway":   {"SUBWAY", "METRO"},
+	"tram":     {"TRAM", "CABLE_CAR", "FUNICULAR"},
+	"bus":      {"BUS", "COACH"},
+	"ferry":    {"FERRY"},
+}
+
+// transitModes turns the filter into MOTIS' list; empty means everything.
+func transitModes(s string) (string, error) {
+	if s == "" {
+		return "", nil
+	}
+	seen := map[string]bool{}
+	var out []string
+	for _, g := range strings.Split(strings.ToLower(s), ",") {
+		ms, ok := modeGroups[strings.TrimSpace(g)]
+		if !ok {
+			return "", badRequest("invalid modes")
+		}
+		for _, m := range ms {
+			if !seen[m] {
+				seen[m] = true
+				out = append(out, m)
+			}
+		}
+	}
+	return strings.Join(out, ","), nil
 }

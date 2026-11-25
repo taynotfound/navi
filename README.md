@@ -36,7 +36,7 @@ go run .
 
 Or `docker compose up -d`. Everything you can set is in `server/.env.example`. The live one runs at https://navi-api.taymaerz.de.
 
-Endpoints, all JSON: `/v1/search`, `/v1/nearby`, `/v1/board`, `/v1/plan`, `/v1/trip`, `/v1/station`, `POST /v1/live`, `POST /v1/share`, `/v1/share?id=`, `POST /v1/assistant`.
+Endpoints, all JSON: `/v1/search`, `/v1/nearby`, `/v1/board`, `/v1/plan`, `/v1/trip`, `/v1/station`, `POST /v1/live`, `POST /v1/share`, `/v1/share?id=`, `POST /v1/assistant`, `/v1/punctuality`, `/v1/photos`. Place search also uses Photon (OpenStreetMap, `PHOTON_URL`), vehicle photos come from Wikimedia Commons.
 
 ## Building the app
 

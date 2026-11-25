@@ -171,7 +171,7 @@ private fun SavedTripCard(t: SavedTrip, nav: Nav) {
                 )
                 if (cancelled) Text(stringResource(R.string.part_cancelled), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
             }
-            IconButton(onClick = { Store.toggleSaved(it, t.from, t.to) }) { Icon(Icons.Filled.Delete, stringResource(R.string.unsave_trip)) }
+            IconButton(onClick = { Store.toggleSavedKey(t.key, it, t.from, t.to) }) { Icon(Icons.Filled.Delete, stringResource(R.string.unsave_trip)) }
         }
     }
 }

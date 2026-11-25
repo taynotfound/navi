@@ -99,6 +99,7 @@ class Nav(private val nc: NavHostController) {
     fun back() { nc.popBackStack() }
     fun results() = nc.navigate("results")
     fun itinerary() = nc.navigate("itinerary")
+    fun walk() = nc.navigate("walk")
     fun settings() = nc.navigate("settings")
     fun assistant() = nc.navigate("assistant")
     fun board(l: Location) = nc.navigate("board?id=${enc(l.id)}&name=${enc(l.name)}&lat=${l.lat}&lon=${l.lon}")
@@ -131,6 +132,7 @@ fun NaviApp() {
         composable("home") { Home(nav) }
         composable("results") { ResultsScreen(nav) }
         composable("itinerary") { ItineraryScreen(nav) }
+        composable("walk") { app.navi.ui.WalkMapScreen(nav) }
         composable("settings") { SettingsScreen(nav) }
         composable("assistant") { app.navi.ui.AssistantScreen(nav) }
         composable("board?id={id}&name={name}&lat={lat}&lon={lon}") { e ->

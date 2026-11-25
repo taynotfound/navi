@@ -292,4 +292,16 @@
     <string name="stay_same_vehicle">Stay on board at %1$s, the bus carries on as %2$s.</string>
     <string name="stay_same_line">At %1$s, take the %2$s at %3$s instead of waiting. Navi found an earlier run (often the same vehicle, just stay on and ask the driver).</string>
     <string name="risk_often_late">%1$s is often up to %2$d min late at %3$s. Your change there has %4$d min.</string>
+    <string name="all_types">All types</string>
+    <string name="n_types">%1$d types</string>
+    <string name="types_title">Which transport?</string>
+    <string name="pick_date">Other day</string>
+    <string name="use_keyboard">Type the time</string>
+    <string name="use_dial">Use the clock</string>
+    <string name="walk_map">Show walk on map</string>
+    <string name="walk_to">Walk to %1$s</string>
+    <string name="walk_to_platform">Walk to platform %1$s</string>
+    <string name="walk_next_ride">%1$s at %2$s</string>
+    <string name="recenter">Show me and the destination</string>
+    <string name="open_in_maps">Open in maps app</string>
 </resources>

@@ -143,7 +143,6 @@ fun delayOf(actual: String?, scheduled: String?, realtime: Boolean): Int? {
 fun JourneyTab(nav: Nav) {
     val ctx = LocalContext.current
     var picking by rememberSaveable { mutableStateOf<String?>(null) } // "from" | "to"
-    var timeDialog by remember { mutableStateOf(false) }
 
     // Idiot-proof default: start where you are.
     LaunchedEffect(Unit) {
@@ -173,26 +172,7 @@ fun JourneyTab(nav: Nav) {
             }
         }
 
-        FlowRow(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), horizontalArrangement = ItemSpacing) {
-            FilterChip(
-                selected = JourneyForm.time != null,
-                onClick = { timeDialog = true },
-                label = { Text(timeLabel()) },
-                leadingIcon = { Icon(Icons.Filled.Schedule, null, Modifier.size(18.dp)) },
-            )
-            FilterChip(
-                selected = JourneyForm.wheelchair,
-                onClick = { JourneyForm.wheelchair = !JourneyForm.wheelchair },
-                label = { Text(stringResource(R.string.step_free)) },
-                leadingIcon = { Icon(Icons.AutoMirrored.Filled.Accessible, null, Modifier.size(18.dp)) },
-            )
-            FilterChip(
-                selected = JourneyForm.bike,
-                onClick = { JourneyForm.bike = !JourneyForm.bike },
-                label = { Text(stringResource(R.string.with_bike)) },
-                leadingIcon = { Icon(Icons.AutoMirrored.Filled.DirectionsBike, null, Modifier.size(18.dp)) },
-            )
-        }
+        TripOptionChips(Modifier.padding(horizontal = 16.dp, vertical = 12.dp))
 
         val ready = JourneyForm.from != null && JourneyForm.to != null && JourneyForm.from?.id != JourneyForm.to?.id
         Button(
@@ -269,18 +249,6 @@ fun JourneyTab(nav: Nav) {
             onPick = { if (target == "from") JourneyForm.from = it else JourneyForm.to = it; picking = null },
         )
     }
-    if (timeDialog) TimeDialog { timeDialog = false }
-}
-
-@Composable
-private fun timeLabel(): String {
-    val t = JourneyForm.time ?: return stringResource(R.string.leave_now)
-    val days = Duration.between(ZonedDateTime.now().toLocalDate().atStartOfDay(), t.toLocalDate().atStartOfDay()).toDays()
-    val day = when (days) {
-        0L -> stringResource(R.string.today_lc); 1L -> stringResource(R.string.tomorrow_lc); 2L -> stringResource(R.string.day_after_lc)
-        else -> t.toLocalDate().toString()
-    }
-    return stringResource(if (JourneyForm.arriveBy) R.string.arrive_at else R.string.depart_at, day, hhmm(t))
 }
 
 @Composable
@@ -305,41 +273,6 @@ private fun PlaceField(label: String, value: Location?, placeholder: String, dot
             )
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun TimeDialog(onClose: () -> Unit) {
-    val now = ZonedDateTime.now()
-    val initial = JourneyForm.time ?: now
-    val state = rememberTimePickerState(initial.hour, initial.minute, is24Hour = true)
-    var arrive by remember { mutableStateOf(JourneyForm.arriveBy) }
-    var dayOffset by remember {
-        mutableIntStateOf(Duration.between(now.toLocalDate().atStartOfDay(), initial.toLocalDate().atStartOfDay()).toDays().toInt().coerceIn(0, 2))
-    }
-    AlertDialog(
-        onDismissRequest = onClose,
-        confirmButton = {
-            TextButton(onClick = {
-                JourneyForm.arriveBy = arrive
-                JourneyForm.time = now.toLocalDate().plusDays(dayOffset.toLong()).atTime(state.hour, state.minute).atZone(now.zone)
-                onClose()
-            }) { Text(stringResource(R.string.apply)) }
-        },
-        dismissButton = {
-            TextButton(onClick = { JourneyForm.time = null; JourneyForm.arriveBy = false; onClose() }) { Text(stringResource(R.string.now_button)) }
-        },
-        title = { Text(stringResource(R.string.when_q)) },
-        text = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.verticalScroll(rememberScrollState())) {
-                ConnectedChoice(listOf(stringResource(R.string.departure), stringResource(R.string.arrival)), if (arrive) 1 else 0, { arrive = it == 1 })
-                Spacer(Modifier.height(12.dp))
-                ConnectedChoice(listOf(stringResource(R.string.today), stringResource(R.string.tomorrow), stringResource(R.string.day_after)), dayOffset, { dayOffset = it })
-                Spacer(Modifier.height(16.dp))
-                TimePicker(state = state)
-            }
-        },
-    )
 }
 
 // =====================================================================
@@ -367,7 +300,7 @@ fun ResultsScreen(nav: Nav) {
             try {
                 val p = Api.plan(
                     from.id, to.id, JourneyForm.time?.toOffsetDateTime()?.toString(), JourneyForm.arriveBy,
-                    JourneyForm.wheelchair, JourneyForm.bike, cursor,
+                    JourneyForm.wheelchair, JourneyForm.bike, cursor, JourneyForm.modes,
                 )
                 val merged = when (where) { "earlier" -> p.itineraries + items; "later" -> items + p.itineraries; else -> p.itineraries }
                 items = merged.distinctBy(::key).sortedBy { parseTime(it.start) }
@@ -382,7 +315,7 @@ fun ResultsScreen(nav: Nav) {
             }
         }
     }
-    LaunchedEffect(from.id, to.id, JourneyForm.time, JourneyForm.arriveBy, JourneyForm.wheelchair, JourneyForm.bike) { load(null, "initial") }
+    LaunchedEffect(from.id, to.id, JourneyForm.time, JourneyForm.arriveBy, JourneyForm.wheelchair, JourneyForm.bike, JourneyForm.modes) { load(null, "initial") }
 
     Scaffold(
         topBar = {
@@ -398,6 +331,7 @@ fun ResultsScreen(nav: Nav) {
         },
     ) { pad ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = pad.calculateTopPadding() + 4.dp, bottom = pad.calculateBottomPadding() + 24.dp)) {
+            item { TripOptionChips(Modifier.padding(horizontal = 16.dp)) }
             when {
                 loading == "initial" -> item { LoadingState(text = stringResource(R.string.searching_connections)) }
                 error != null && items.isEmpty() -> item { ErrorState(error!!, onRetry = { load(null, "initial") }) }
@@ -545,7 +479,8 @@ fun legLine(l: Leg) = MapLine(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItineraryScreen(nav: Nav) {
-    val planned = JourneyForm.selected ?: run { LaunchedEffect(Unit) { nav.back() }; return }
+    val planned = JourneyForm.selected?.takeIf { p -> p.legs.isNotEmpty() } ?: run { LaunchedEffect(Unit) { nav.back() }; return }
+    val savedKey = remember(planned) { app.navi.tripKey(planned) }
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var it by remember(planned) { mutableStateOf(planned) }
@@ -562,7 +497,9 @@ fun ItineraryScreen(nav: Nav) {
             val start = parseTime(it.start) ?: now
             val end = parseTime(it.end) ?: now
             if (transit.isNotEmpty() && now.isAfter(start.minusHours(3)) && now.isBefore(end.plusMinutes(30))) {
-                runCatching { Api.live(it) }.onSuccess { fresh -> it = fresh; updatedAt = ZonedDateTime.now(); Store.updateSaved(fresh) }
+                runCatching { Api.live(it) }.onSuccess { fresh ->
+                    if (fresh.legs.size == it.legs.size) { it = fresh; updatedAt = ZonedDateTime.now(); Store.updateSaved(savedKey, fresh) }
+                }
             }
             kotlinx.coroutines.delay(30_000)
         }
@@ -589,8 +526,8 @@ fun ItineraryScreen(nav: Nav) {
                     }
                 },
                 actions = {
-                    val saved = Store.isSaved(it)
-                    IconButton(onClick = { Store.toggleSaved(it, fromName, toName) }) {
+                    val saved = Store.isSavedKey(savedKey)
+                    IconButton(onClick = { Store.toggleSavedKey(savedKey, it, fromName, toName) }) {
                         Icon(if (saved) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder, stringResource(if (saved) R.string.unsave_trip else R.string.save_trip))
                     }
                     IconButton(enabled = !sharing, onClick = {
@@ -618,8 +555,10 @@ fun ItineraryScreen(nav: Nav) {
                 Spacer(Modifier.height(8.dp))
             }
             it.legs.forEachIndexed { i, l ->
-                item(key = i) {
-                    if (l.isWalk) WalkLeg(l, isTransfer = i > 0 && i < it.legs.lastIndex)
+                item(key = "leg$i") {
+                    if (l.isWalk) WalkLeg(l, isTransfer = i > 0 && i < it.legs.lastIndex) {
+                        WalkContext.set(l, it.legs.getOrNull(i + 1)?.takeIf { n -> !n.isWalk }); nav.walk()
+                    }
                     else TransitLeg(l, nav)
                 }
             }
@@ -648,6 +587,11 @@ private fun findBreak(it: Itinerary): Break? {
         val buffer = Duration.between(arr, dep).toMinutes() - walk
         if (buffer < 0) return Break(idx[n - 1] + 1, place(prev.to), arr, stringResource(R.string.risk_missed, prev.to.name, -buffer))
         if (buffer < 2 && (prev.realtime || l.realtime)) return Break(idx[n - 1] + 1, place(prev.to), arr, stringResource(R.string.risk_tight, prev.to.name, buffer))
+        // no live data yet: warn when this line is usually later than the change allows
+        val usual = prev.arrDelay?.likely ?: 0
+        if (!prev.realtime && usual > buffer && usual >= 3) {
+            return Break(idx[n - 1] + 1, place(prev.to), arr.plusMinutes(usual.toLong()), stringResource(R.string.risk_often_late, prev.line.orEmpty(), usual, prev.to.name, buffer.toInt()))
+        }
     }
     return null
 }
@@ -662,7 +606,7 @@ private fun Failover(it: Itinerary, nav: Nav) {
     var alts by remember(br.from.id, br.keep) { mutableStateOf<List<Itinerary>?>(null) }
     var failed by remember(br.from.id, br.keep) { mutableStateOf(false) }
     LaunchedEffect(br.from.id, br.keep) {
-        runCatching { Api.plan(br.from.id, dest, br.time.toOffsetDateTime().toString(), false, JourneyForm.wheelchair, JourneyForm.bike) }
+        runCatching { Api.plan(br.from.id, dest, br.time.toOffsetDateTime().toString(), false, JourneyForm.wheelchair, JourneyForm.bike, modes = JourneyForm.modes) }
             .onSuccess { p -> alts = p.itineraries.filter { a -> a.legs.any { l -> !l.isWalk } }.take(3) }
             .onFailure { failed = true }
     }
@@ -771,6 +715,7 @@ object Display {
 /** The trip as one line, walks included: each ride in its line colour, the part already behind you in amber, the next stop as a blue ring. */
 @Composable
 private fun RouteStrip(transit: List<Leg>, now: ZonedDateTime, modifier: Modifier = Modifier) {
+    if (transit.isEmpty()) return
     // walks draw as plain track, only rides get a colour
     val times = transit.flatMap { l ->
         listOf(parseTime(l.from.departure ?: l.from.scheduledDeparture), parseTime(l.to.arrival ?: l.to.scheduledArrival))
@@ -814,7 +759,7 @@ private fun shareText(it: Itinerary) = buildString {
 }
 
 @Composable
-private fun WalkLeg(l: Leg, isTransfer: Boolean) {
+private fun WalkLeg(l: Leg, isTransfer: Boolean, onMap: () -> Unit) {
     var open by rememberSaveable { mutableStateOf(false) }
     val steps = l.steps.filter { it.distance > 0 || it.kind == "ELEVATOR" }
     val c = MaterialTheme.colorScheme
@@ -829,6 +774,7 @@ private fun WalkLeg(l: Leg, isTransfer: Boolean) {
                 listOfNotNull("$what ${dur(l.duration)}", formatDistance(l.distance)).joinToString(", "),
                 Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = c.onSurfaceVariant,
             )
+            IconButton(onClick = onMap) { Icon(Icons.Filled.Map, stringResource(R.string.walk_map), tint = c.primary) }
             if (steps.size > 1) {
                 Text(stringResource(if (open) R.string.hide_directions else R.string.show_directions), style = MaterialTheme.typography.labelLarge, color = c.primary)
                 Icon(if (open) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, null, Modifier.padding(start = 2.dp).size(20.dp), tint = c.primary)
@@ -849,7 +795,7 @@ private fun WalkLeg(l: Leg, isTransfer: Boolean) {
     }
 }
 
-private fun stepIcon(kind: String) = when (kind) {
+internal fun stepIcon(kind: String) = when (kind) {
     "LEFT" -> Icons.Filled.TurnLeft
     "RIGHT" -> Icons.Filled.TurnRight
     "SLIGHT_LEFT" -> Icons.Filled.TurnSlightLeft
@@ -861,7 +807,7 @@ private fun stepIcon(kind: String) = when (kind) {
 }
 
 @Composable
-private fun stepText(st: Step): String {
+internal fun stepText(st: Step): String {
     val street = st.street?.takeIf { it.isNotBlank() }
     return when (st.kind) {
         "START" -> if (street != null) stringResource(R.string.step_start_on, street) else stringResource(R.string.step_start)
@@ -897,6 +843,13 @@ private fun TransitLeg(l: Leg, nav: Nav) {
                     Text("→ ${l.headsign.orEmpty()}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 l.operator?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                stayText(l)?.let { t ->
+                    Text(
+                        t, Modifier.padding(top = 8.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.primaryContainer).padding(10.dp),
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                }
+                if (!l.realtime) UsualDelayLine(l.depDelay, Modifier.padding(top = 4.dp))
                 if (l.cancelled) WarningLine(stringResource(R.string.trip_cancelled), error = true)
                 ReasonList(l.notes, Modifier.padding(top = 4.dp))
                 l.alerts.forEach { a ->
@@ -941,6 +894,15 @@ private fun TransitLeg(l: Leg, nav: Nav) {
             }
         }
     }
+}
+
+/** Navi fixed "ride to the end, wait, same line again": say so, so nobody gets off. */
+@Composable
+private fun stayText(l: Leg): String? = when (l.stayOnBoard) {
+    "passes" -> stringResource(R.string.stay_passes, l.to.name)
+    "same-vehicle" -> stringResource(R.string.stay_same_vehicle, l.to.name, l.line.orEmpty())
+    "same-line" -> stringResource(R.string.stay_same_line, l.to.name, l.line.orEmpty(), hhmm(l.from.scheduledDeparture))
+    else -> null
 }
 
 @Composable
