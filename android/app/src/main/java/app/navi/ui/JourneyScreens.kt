@@ -1,6 +1,8 @@
 package app.navi.ui
 
 import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.ui.text.withStyle
 import app.navi.Step
 import androidx.compose.material.icons.filled.Straight
@@ -486,6 +488,11 @@ fun ItineraryScreen(nav: Nav) {
     var it by remember(planned) { mutableStateOf(planned) }
     var updatedAt by remember(planned) { mutableStateOf<ZonedDateTime?>(null) }
     var sharing by remember { mutableStateOf(false) }
+    // notifications: live trip + alerts, and reminders for saved trips
+    val askNotify = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestPermission()) { }
+    fun ensureNotify() {
+        if (!app.navi.canNotify(ctx) && android.os.Build.VERSION.SDK_INT >= 33) askNotify.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+    }
     val transit = it.legs.filterNot { l -> l.isWalk }
     val fromName = it.legs.first().from.name
     val toName = it.legs.last().to.name
@@ -527,7 +534,7 @@ fun ItineraryScreen(nav: Nav) {
                 },
                 actions = {
                     val saved = Store.isSavedKey(savedKey)
-                    IconButton(onClick = { Store.toggleSavedKey(savedKey, it, fromName, toName) }) {
+                    IconButton(onClick = { if (!saved) ensureNotify(); Store.toggleSavedKey(savedKey, it, fromName, toName) }) {
                         Icon(if (saved) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder, stringResource(if (saved) R.string.unsave_trip else R.string.save_trip))
                     }
                     IconButton(enabled = !sharing, onClick = {
@@ -546,6 +553,17 @@ fun ItineraryScreen(nav: Nav) {
     ) { pad ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = pad.calculateTopPadding(), bottom = pad.calculateBottomPadding() + 32.dp)) {
             item { LiveStatusCard(it, updatedAt) }
+            if (transit.isNotEmpty() && (parseTime(it.end) ?: ZonedDateTime.now()).isAfter(ZonedDateTime.now())) item {
+                val following = app.navi.TripService.tracked?.let { t -> t.legs.size == it.legs.size && t.legs.firstOrNull { l -> l.tripId != null }?.tripId == it.legs.firstOrNull { l -> l.tripId != null }?.tripId } == true
+                androidx.compose.material3.FilledTonalButton(
+                    onClick = { if (following) app.navi.TripService.stop(ctx) else { ensureNotify(); app.navi.TripService.start(ctx, it) } },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                ) {
+                    Icon(if (following) Icons.Filled.NotificationsOff else Icons.Filled.NotificationsActive, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(if (following) R.string.live_stop else R.string.live_start))
+                }
+            }
             item { Failover(it, nav) }
             item {
                 NaviMap(

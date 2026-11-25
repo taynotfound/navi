@@ -79,6 +79,12 @@ class MainActivity : AppCompatActivity() {
 
     /** …/navi/trip/?id=<id> (website) or https://<api>/j/<id> → open the shared trip. */
     private fun handleLink(intent: Intent?) {
+        if (intent?.getBooleanExtra("openTracked", false) == true) DeepLink.openTracked = true
+        intent?.getStringExtra("journey")?.let { s ->
+            runCatching { kotlinx.serialization.json.Json.decodeFromString(SavedJourney.serializer(), s) }.getOrNull()?.let { j ->
+                JourneyForm.from = j.from; JourneyForm.to = j.to; DeepLink.openResults = true
+            }
+        }
         val uri: Uri = intent?.data ?: return
         val id = uri.getQueryParameter("id")
             ?: uri.pathSegments.takeIf { it.size == 2 && it[0] == "j" }?.get(1)
@@ -88,6 +94,8 @@ class MainActivity : AppCompatActivity() {
 
 object DeepLink {
     var shareId by mutableStateOf<String?>(null)
+    var openTracked by mutableStateOf(false)
+    var openResults by mutableStateOf(false)
 }
 
 object HomeTab {
@@ -121,6 +129,20 @@ fun NaviApp() {
     val nc = rememberNavController()
     val nav = remember(nc) { Nav(nc) }
     var askSupport by remember { mutableStateOf(Store.shouldAskForSupport()) }
+
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(DeepLink.openTracked) {
+        if (!DeepLink.openTracked) return@LaunchedEffect
+        DeepLink.openTracked = false
+        TripService.tracked?.let { JourneyForm.selected = it; nav.itinerary() }
+    }
+    LaunchedEffect(DeepLink.openResults) {
+        if (!DeepLink.openResults) return@LaunchedEffect
+        DeepLink.openResults = false
+        if (JourneyForm.from != null && JourneyForm.to != null) nav.results()
+    }
+    LaunchedEffect(Store.savedTrips) { runCatching { Reminders.sync(ctx) } }
+    LaunchedEffect(Store.recentJourneys) { Shortcuts.sync(ctx) }
 
     LaunchedEffect(DeepLink.shareId) {
         val id = DeepLink.shareId ?: return@LaunchedEffect

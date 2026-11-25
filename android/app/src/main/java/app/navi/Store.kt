@@ -21,6 +21,7 @@ import java.time.ZonedDateTime
 object L {
     @SuppressLint("StaticFieldLeak") // replaced on every activity (re)creation
     lateinit var ctx: Context
+    val ready get() = ::ctx.isInitialized
     fun s(id: Int, vararg args: Any): String = ctx.getString(id, *args)
 }
 
@@ -35,6 +36,7 @@ fun tripKey(it: Itinerary) = it.start + "|" + it.legs.firstOrNull { l -> l.tripI
 /** Favourites, history, saved trips and settings, persisted in SharedPreferences. Observable from Compose. */
 object Store {
     private lateinit var prefs: SharedPreferences
+    val ready get() = ::prefs.isInitialized
     private val json = Json { ignoreUnknownKeys = true }
     private val places = ListSerializer(Location.serializer())
     private val journeys = ListSerializer(SavedJourney.serializer())

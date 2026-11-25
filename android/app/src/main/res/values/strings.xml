@@ -304,4 +304,19 @@
     <string name="walk_next_ride">%1$s at %2$s</string>
     <string name="recenter">Show me and the destination</string>
     <string name="open_in_maps">Open in maps app</string>
+    <string name="channel_trip">Live trip</string>
+    <string name="channel_alerts">Trip alerts</string>
+    <string name="channel_reminders">Trip reminders</string>
+    <string name="live_start">Follow live in notifications</string>
+    <string name="live_start_short">Follow live</string>
+    <string name="live_stop">Stop following</string>
+    <string name="live_following">Following live in your notifications</string>
+    <string name="alert_leave">%1$s leaves in %2$d min</string>
+    <string name="alert_change">Change at %1$s: %2$s in %3$d min</string>
+    <string name="alert_get_off">Get off at the next stop: %1$s</string>
+    <string name="alert_delay">%1$s is now %2$d min late</string>
+    <string name="alert_on_time">%1$s is on time again</string>
+    <string name="alert_open_alternatives">Open Navi for alternatives.</string>
+    <string name="reminder_title">To %1$s at %2$s</string>
+    <string name="reminder_text">In %1$d min: %2$s from %3$s</string>
 </resources>

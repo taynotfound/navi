@@ -289,4 +289,19 @@
     <string name="walk_next_ride">%1$s um %2$s</string>
     <string name="recenter">Mich und das Ziel zeigen</string>
     <string name="open_in_maps">In Karten-App öffnen</string>
+    <string name="channel_trip">Fahrt live</string>
+    <string name="channel_alerts">Fahrt-Hinweise</string>
+    <string name="channel_reminders">Fahrt-Erinnerungen</string>
+    <string name="live_start">Live in Benachrichtigungen verfolgen</string>
+    <string name="live_start_short">Live verfolgen</string>
+    <string name="live_stop">Nicht mehr verfolgen</string>
+    <string name="live_following">Wird live in deinen Benachrichtigungen verfolgt</string>
+    <string name="alert_leave">%1$s fährt in %2$d Min.</string>
+    <string name="alert_change">Umstieg in %1$s: %2$s in %3$d Min.</string>
+    <string name="alert_get_off">Nächster Halt aussteigen: %1$s</string>
+    <string name="alert_delay">%1$s hat jetzt %2$d Min. Verspätung</string>
+    <string name="alert_on_time">%1$s ist wieder pünktlich</string>
+    <string name="alert_open_alternatives">Öffne Navi für Alternativen.</string>
+    <string name="reminder_title">Nach %1$s um %2$s</string>
+    <string name="reminder_text">In %1$d Min.: %2$s ab %3$s</string>
 </resources>
