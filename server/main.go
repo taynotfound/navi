@@ -39,6 +39,8 @@ type App struct {
 	shares    *Shares
 	shareBase string
 	ai        *Assistant // nil when no OpenRouter key is set
+	delays    *Delays
+	photonURL string // named places (shops, restaurants…); empty = off
 }
 
 type httpError struct {
@@ -102,14 +104,42 @@ func (a *App) search(ctx context.Context, q url.Values) (any, error) {
 	if q.Get("type") == "stop" {
 		typ = "STOP"
 	}
-	return cached(a.cache, "search|"+strings.ToLower(text)+"|"+typ, time.Hour, func() ([]Location, error) {
+	// an optional, coarse position ranks nearby places first ("Rewe" means the one in your town)
+	var lat, lon *float64
+	if la, err := strconv.ParseFloat(q.Get("lat"), 64); err == nil && math.Abs(la) <= 90 {
+		if lo, err := strconv.ParseFloat(q.Get("lon"), 64); err == nil && math.Abs(lo) <= 180 {
+			lat, lon = &la, &lo
+		}
+	}
+	near := ""
+	if lat != nil {
+		near = fmt.Sprintf("|%.1f,%.1f", *lat, *lon)
+	}
+	return cached(a.cache, "search|"+strings.ToLower(text)+"|"+typ+near, time.Hour, func() ([]Location, error) {
 		var raw motisGeocode
+		var places []Location
+		var placesErr error
+		var wg sync.WaitGroup
+		if typ == "" {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				places, placesErr = a.photon(ctx, text, lat, lon)
+				if placesErr != nil {
+					log.Printf("photon: %v", placesErr)
+				}
+			}()
+		}
 		err := a.motis.get(ctx, "/api/v1/geocode", url.Values{"text": {text}, "language": {"de"}, "type": {typ}}, &raw)
-		out := nearGermany(NormalizeGeocode(raw))
+		wg.Wait()
+		if err != nil && len(places) == 0 {
+			return nil, err
+		}
+		out := mergeSearch(text, nearGermany(NormalizeGeocode(raw)), places)
 		if len(out) > 15 {
 			out = out[:15]
 		}
-		return out, err
+		return out, nil
 	})
 }
 
@@ -266,6 +296,13 @@ func (a *App) board(ctx context.Context, q url.Values) (any, error) {
 	} else {
 		b.Rows = append([]Row{}, motisRows...)
 	}
+	for i := range b.Rows {
+		r := &b.Rows[i]
+		if !arrivals {
+			a.delays.Observe(r.ID, r.Line, r.Operator, stopID, r.ScheduledTime, r.Delay, r.Cancelled)
+		}
+		r.Usual = a.delays.Predict(r.Line, r.Operator, stopID, r.ScheduledTime)
+	}
 	sort.SliceStable(b.Rows, func(i, j int) bool {
 		ti, _ := time.Parse(time.RFC3339, b.Rows[i].Time)
 		tj, _ := time.Parse(time.RFC3339, b.Rows[j].Time)
@@ -310,7 +347,12 @@ func (a *App) plan(ctx context.Context, q url.Values) (any, error) {
 			}
 			return Plan{}, err
 		}
-		return NormalizePlan(&raw), nil
+		p := NormalizePlan(&raw)
+		p.Itineraries = a.FixSameLine(ctx, p.Itineraries)
+		for i := range p.Itineraries {
+			a.delays.AnnotateLegs(p.Itineraries[i].Legs)
+		}
+		return p, nil
 	})
 }
 
@@ -466,6 +508,14 @@ func loadDotEnv(path string) {
 	}
 }
 
+// envOr is like env, but an explicitly empty value stays empty (to switch something off).
+func envOr(k, def string) string {
+	if v, ok := os.LookupEnv(k); ok {
+		return v
+	}
+	return def
+}
+
 func env(k, def string) string {
 	if v := os.Getenv(k); v != "" {
 		return v
@@ -494,6 +544,9 @@ func main() {
 		stations: NewStationIndex(dataDir),
 		cache:    NewCache(20_000),
 		shares:   NewShares(dataDir),
+		delays:   NewDelays(dataDir),
+		// Photon (OpenStreetMap) for named places; set PHOTON_URL= (empty) to turn it off
+		photonURL: strings.TrimRight(envOr("PHOTON_URL", "https://photon.komoot.io"), "/"),
 		// shared trips open on the website's trip page
 		shareBase: env("SHARE_URL", "https://taynotfound.github.io/navi/trip/?id="),
 	}
@@ -513,6 +566,7 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	app.delays.Start(ctx)
 	app.stations.Start(ctx) // non-blocking: boards work without it; station info appears once loaded
 
 	rl := &rateLimiter{perMin: perMin, buckets: map[string]*bucket{}}
@@ -525,6 +579,7 @@ func main() {
 	for pattern, h := range map[string]func(context.Context, *http.Request) (any, error){
 		"GET /v1/search": get(app.search), "GET /v1/nearby": get(app.nearby), "GET /v1/board": get(app.board),
 		"GET /v1/plan": get(app.plan), "GET /v1/trip": get(app.trip), "GET /v1/station": get(app.station),
+		"GET /v1/punctuality": get(app.punctuality), "GET /v1/photos": get(app.photos),
 		"GET /healthz": get(app.health), "POST /v1/live": app.liveHandler, "GET /v1/share": app.shareGet,
 		"POST /v1/share": app.shareCreate, "POST /v1/assistant": app.assistantHandler,
 	} {

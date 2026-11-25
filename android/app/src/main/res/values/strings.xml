@@ -265,4 +265,31 @@
     <string name="alternatives_none">Nothing better right now. Stay put or ask staff.</string>
     <plurals name="more_notices"><item quantity="one">%d more notice</item><item quantity="other">%d more notices</item></plurals>
     <plurals name="hide_notices"><item quantity="one">Hide notice</item><item quantity="other">Hide notices</item></plurals>
+    <string name="usually_on_time">Usually on time</string>
+    <string name="often_late">Mostly on time, sometimes up to %1$d min late</string>
+    <string name="usually_late">Usually %1$d min late, often up to %2$d</string>
+    <string name="punctuality">How punctual is this line?</string>
+    <string name="punctuality_summary">%1$d %% of runs less than 3 min late, typically %2$d min. From %3$d runs Navi has seen.</string>
+    <string name="punctuality_by_time">By time of day</string>
+    <string name="at_your_stop">At your stop: %1$s</string>
+    <string name="delay_class_on_time">On time</string>
+    <string name="delay_class_3">3–5 min</string>
+    <string name="delay_class_6">6–10 min</string>
+    <string name="delay_class_11">11–20 min</string>
+    <string name="delay_class_21">Over 20 min</string>
+    <string name="delay_class_cancelled">Cancelled</string>
+    <string name="band_night">Night</string>
+    <string name="band_morning">Morning rush</string>
+    <string name="band_day">Daytime</string>
+    <string name="band_evening_peak">Evening rush</string>
+    <string name="band_evening">Evening</string>
+    <string name="band_weekend">%1$s (weekend)</string>
+    <string name="show_photos">Show vehicle photos</string>
+    <string name="spotter_photos">Spotter photos</string>
+    <string name="spotter_photos_hint">From Wikimedia Commons. Similar vehicles, not necessarily yours. Tap for the photographer and licence.</string>
+    <string name="no_photos">No photos of this line found.</string>
+    <string name="stay_passes">Stay on: this ride already stops at %1$s, no need to go to the end and back.</string>
+    <string name="stay_same_vehicle">Stay on board at %1$s, the bus carries on as %2$s.</string>
+    <string name="stay_same_line">At %1$s, take the %2$s at %3$s instead of waiting. Navi found an earlier run (often the same vehicle, just stay on and ask the driver).</string>
+    <string name="risk_often_late">%1$s is often up to %2$d min late at %3$s. Your change there has %4$d min.</string>
 </resources>

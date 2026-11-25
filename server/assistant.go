@@ -20,8 +20,6 @@ import (
 	_ "time/tzdata" // Europe/Berlin without relying on the container's tzdata
 )
 
-var berlin, _ = time.LoadLocation("Europe/Berlin")
-
 type Assistant struct {
 	Key, Referer string
 	Models       []string

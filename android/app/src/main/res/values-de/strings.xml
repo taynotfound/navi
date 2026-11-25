@@ -250,4 +250,31 @@
     <string name="alternatives_none">Gerade nichts Besseres. Dranbleiben oder Personal fragen.</string>
     <plurals name="more_notices"><item quantity="one">%d weiterer Hinweis</item><item quantity="other">%d weitere Hinweise</item></plurals>
     <plurals name="hide_notices"><item quantity="one">Hinweis zuklappen</item><item quantity="other">Hinweise zuklappen</item></plurals>
+    <string name="usually_on_time">Meist pünktlich</string>
+    <string name="often_late">Meist pünktlich, manchmal bis %1$d Min. später</string>
+    <string name="usually_late">Meist %1$d Min. später, oft bis %2$d</string>
+    <string name="punctuality">Wie pünktlich ist die Linie?</string>
+    <string name="punctuality_summary">%1$d %% der Fahrten weniger als 3 Min. zu spät, typisch %2$d Min. Aus %3$d Fahrten, die Navi gesehen hat.</string>
+    <string name="punctuality_by_time">Nach Tageszeit</string>
+    <string name="at_your_stop">An deiner Haltestelle: %1$s</string>
+    <string name="delay_class_on_time">Pünktlich</string>
+    <string name="delay_class_3">3–5 Min.</string>
+    <string name="delay_class_6">6–10 Min.</string>
+    <string name="delay_class_11">11–20 Min.</string>
+    <string name="delay_class_21">Über 20 Min.</string>
+    <string name="delay_class_cancelled">Fällt aus</string>
+    <string name="band_night">Nachts</string>
+    <string name="band_morning">Morgens im Berufsverkehr</string>
+    <string name="band_day">Tagsüber</string>
+    <string name="band_evening_peak">Nachmittags im Berufsverkehr</string>
+    <string name="band_evening">Abends</string>
+    <string name="band_weekend">%1$s (Wochenende)</string>
+    <string name="show_photos">Fotos der Fahrzeuge zeigen</string>
+    <string name="spotter_photos">Spotter-Fotos</string>
+    <string name="spotter_photos_hint">Von Wikimedia Commons. Ähnliche Fahrzeuge, nicht unbedingt deins. Antippen für Fotograf und Lizenz.</string>
+    <string name="no_photos">Keine Fotos von dieser Linie gefunden.</string>
+    <string name="stay_passes">Sitzen bleiben: Die Fahrt hält schon in %1$s, du musst nicht bis zur Endhaltestelle und zurück.</string>
+    <string name="stay_same_vehicle">In %1$s sitzen bleiben, der Bus fährt als %2$s weiter.</string>
+    <string name="stay_same_line">In %1$s die %2$s um %3$s nehmen statt zu warten. Navi hat eine frühere Fahrt gefunden (oft dasselbe Fahrzeug, einfach sitzen bleiben und beim Fahrer nachfragen).</string>
+    <string name="risk_often_late">%1$s ist in %3$s oft bis %2$d Min. zu spät. Dein Umstieg dort hat %4$d Min.</string>
 </resources>

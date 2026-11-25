@@ -2,6 +2,7 @@ package app.navi.ui
 
 import android.annotation.SuppressLint
 import android.graphics.RectF
+import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -111,6 +112,11 @@ fun NaviMap(
     onPointClick: ((String) -> Unit)? = null,
     onCameraIdle: ((lat: Double, lon: Double, zoom: Double) -> Unit)? = null,
 ) {
+    // previews and tests can't load MapLibre's native code
+    if (androidx.compose.ui.platform.LocalInspectionMode.current) {
+        androidx.compose.foundation.layout.Box(modifier.background(androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainerHigh))
+        return
+    }
     val ctx = LocalContext.current
     val dark = darkScheme
     val holder = remember { MapHolder() }

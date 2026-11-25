@@ -47,26 +47,27 @@ func StationKey(stopID string) string {
 // ---------- API shapes ----------
 
 type Row struct {
-	Source            string   `json:"source"` // db | motis
-	ID                string   `json:"id"`
-	TripID            string   `json:"tripId,omitempty"`
-	Time              string   `json:"time"`
-	ScheduledTime     string   `json:"scheduledTime"`
-	Delay             *int     `json:"delay"` // minutes, null = no realtime data
-	Realtime          bool     `json:"realtime"`
-	Cancelled         bool     `json:"cancelled"`
-	Platform          string   `json:"platform,omitempty"`
-	ScheduledPlatform string   `json:"scheduledPlatform,omitempty"`
-	Line              string   `json:"line"`
-	Number            string   `json:"number,omitempty"`
-	Mode              string   `json:"mode"`
-	Color             string   `json:"color,omitempty"`
-	TextColor         string   `json:"textColor,omitempty"`
-	Headsign          string   `json:"headsign,omitempty"`
-	Via               []string `json:"via"`
-	Operator          string   `json:"operator,omitempty"`
-	Notes             []string `json:"notes"`
-	Attributes        []string `json:"attributes"`
+	Source            string      `json:"source"` // db | motis
+	ID                string      `json:"id"`
+	TripID            string      `json:"tripId,omitempty"`
+	Time              string      `json:"time"`
+	ScheduledTime     string      `json:"scheduledTime"`
+	Delay             *int        `json:"delay"` // minutes, null = no realtime data
+	Realtime          bool        `json:"realtime"`
+	Cancelled         bool        `json:"cancelled"`
+	Platform          string      `json:"platform,omitempty"`
+	ScheduledPlatform string      `json:"scheduledPlatform,omitempty"`
+	Line              string      `json:"line"`
+	Number            string      `json:"number,omitempty"`
+	Mode              string      `json:"mode"`
+	Color             string      `json:"color,omitempty"`
+	TextColor         string      `json:"textColor,omitempty"`
+	Headsign          string      `json:"headsign,omitempty"`
+	Via               []string    `json:"via"`
+	Operator          string      `json:"operator,omitempty"`
+	Notes             []string    `json:"notes"`
+	Attributes        []string    `json:"attributes"`
+	Usual             *DelayStats `json:"usual,omitempty"` // how late this line usually is here
 }
 
 type Place struct {
@@ -106,6 +107,12 @@ type Leg struct {
 	Alerts []Alert  `json:"alerts"`
 	Steps  []Step   `json:"steps,omitempty"` // walking/cycling directions
 	Notes  []string `json:"notes,omitempty"` // DB messages for this ride, e.g. why it's late
+	// StayOnBoard is set when Navi replaced a long wait for the same line:
+	// "passes" (the first ride already stops at your stop), "same-vehicle", "same-line" (an earlier run).
+	StayOnBoard string `json:"stayOnBoard,omitempty"`
+	// Punctuality learned from past live data: at the stop you board and the stop you leave.
+	DepDelay *DelayStats `json:"depDelay,omitempty"`
+	ArrDelay *DelayStats `json:"arrDelay,omitempty"`
 }
 
 type Alert struct {

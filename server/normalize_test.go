@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"math"
 	"reflect"
 	"strings"
 	"testing"
@@ -163,28 +162,4 @@ func TestBuildSteps(t *testing.T) {
 			t.Fatalf("step %d: got %+v want %+v", i, got[i], want[i])
 		}
 	}
-}
-
-func encodePolyline(pts [][2]float64, precision int) string {
-	f := math.Pow(10, float64(precision))
-	var b []byte
-	put := func(v int) {
-		u := v << 1
-		if v < 0 {
-			u = ^u
-		}
-		for u >= 0x20 {
-			b = append(b, byte((0x20|(u&0x1f))+63))
-			u >>= 5
-		}
-		b = append(b, byte(u+63))
-	}
-	pl, po := 0, 0
-	for _, p := range pts {
-		la, lo := int(math.Round(p[0]*f)), int(math.Round(p[1]*f))
-		put(la - pl)
-		put(lo - po)
-		pl, po = la, lo
-	}
-	return string(b)
 }

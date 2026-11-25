@@ -51,7 +51,34 @@ data class Row(
     val operator: String? = null,
     val notes: List<String> = emptyList(),
     val attributes: List<String> = emptyList(),
+    val usual: DelayStats? = null,
 )
+
+/** How late a line usually is, learned by the server from past live data. Minutes. */
+@Serializable
+data class DelayStats(
+    val median: Int = 0,
+    val likely: Int = 0, // 4 out of 5 runs are at most this late
+    val onTime: Int = 0, // % less than 3 min late
+    val cancelled: Int = 0, // %
+    val samples: Int = 0,
+    val scope: String = "line", // stop | line
+)
+
+@Serializable
+data class BandStats(val band: String, val weekend: Boolean = false, val stats: DelayStats)
+
+@Serializable
+data class Punctuality(
+    val line: String = "",
+    val overall: DelayStats? = null,
+    val atStop: DelayStats? = null,
+    val bands: List<BandStats> = emptyList(),
+    val histogram: List<Int> = emptyList(), // % on time, 3–5, 6–10, 11–20, >20 min, cancelled
+)
+
+@Serializable
+data class Photo(val thumb: String, val page: String, val title: String = "", val author: String = "", val license: String = "")
 
 @Serializable
 data class BoardStop(val id: String, val name: String? = null, val hasStationInfo: Boolean = false)
@@ -105,6 +132,10 @@ data class Leg(
     val alerts: List<Alert> = emptyList(),
     val steps: List<Step> = emptyList(),
     val notes: List<String> = emptyList(),
+    /** passes | same-vehicle | same-line: Navi replaced a long wait at the end stop for the same line. */
+    val stayOnBoard: String? = null,
+    val depDelay: DelayStats? = null,
+    val arrDelay: DelayStats? = null,
 ) {
     val isWalk get() = mode == "WALK" || mode == "BIKE" || mode == "CAR"
 }
@@ -208,6 +239,12 @@ object Api {
     )
 
     suspend fun trip(id: String) = get("/v1/trip", mapOf("id" to id), Leg.serializer())
+
+    suspend fun punctuality(line: String, operator: String?, stop: String?) =
+        get("/v1/punctuality", mapOf("line" to line, "operator" to operator, "stop" to stop), Punctuality.serializer())
+
+    suspend fun photos(line: String, operator: String?, mode: String) =
+        get("/v1/photos", mapOf("line" to line, "operator" to operator, "mode" to mode), ListSerializer(Photo.serializer()))
 
     suspend fun station(stopId: String) = get("/v1/station", mapOf("stop" to stopId), Station.serializer())
 

@@ -117,7 +117,9 @@ func (a *App) tripLeg(ctx context.Context, id string) (Leg, error) {
 		}
 		for _, l := range raw.Legs {
 			if l.TripID != "" {
-				return l.leg(), nil
+				leg := l.leg()
+				a.delays.ObserveRun(leg)
+				return leg, nil
 			}
 		}
 		return Leg{}, httpError{404, "trip not found"}
@@ -199,6 +201,7 @@ func (a *App) LiveItinerary(ctx context.Context, it Itinerary) Itinerary {
 		r := <-ch
 		legs[r.i] = r.leg
 	}
+	a.delays.AnnotateLegs(legs)
 	it.Legs = legs
 	// shortcut: start/end only follow the first/last leg when it is transit; leading/trailing walks keep planned times.
 	if f := legs[0]; f.TripID != "" && f.From.Departure != "" {
