@@ -28,7 +28,9 @@ class SavedTripTest {
     @get:Rule val compose = createComposeRule()
 
     private fun itinerary(): Itinerary {
+        // the fixture is a recorded trip; move it to tomorrow, since Store drops trips a day after arrival
         val text = javaClass.classLoader!!.getResource("itinerary.json")!!.readText()
+            .replace("2026-11-23", java.time.LocalDate.now(java.time.ZoneOffset.UTC).plusDays(1).toString())
         return Json { ignoreUnknownKeys = true }.decodeFromString(Itinerary.serializer(), text)
     }
 
