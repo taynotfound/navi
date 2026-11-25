@@ -333,5 +333,31 @@
     <string name="percent">%d %%</string>
     <plurals name="a11y_in_minutes"><item quantity="one">in %d Minute</item><item quantity="other">in %d Minuten</item></plurals>
     <string name="assistant_setting">„Frag Navi“ zeigen</string>
-    <string name="assistant_setting_hint">Der Assistent-Knopf im Reise-Tab</string>
+    <string name="now_following">Live verfolgt</string>
+    <string name="now_next_trip">Deine nächste Fahrt</string>
+    <string name="open_trip">Fahrt öffnen</string>
+    <string name="home_place">Zuhause</string>
+    <string name="work_place">Arbeit</string>
+    <string name="set_home">Wo ist dein Zuhause?</string>
+    <string name="set_work">Wo ist deine Arbeit?</string>
+    <string name="change_place">%s ändern</string>
+    <string name="tap_to_set">Tippen zum Festlegen</string>
+    <string name="undo">Rückgängig</string>
+    <string name="trip_removed">Fahrt entfernt</string>
+    <string name="favorite_removed">%s entfernt</string>
+    <string name="assistant_setting_hint">Der Chat-Knopf neben „Wohin soll’s gehen?“</string>
+    <string name="nav_start">Navigation</string>
+    <string name="nav_arrived">Du bist da</string>
+    <string name="nav_off_route">Vom Weg abgekommen</string>
+    <string name="nav_off_route_hint">Zurück zur Linie · noch %s</string>
+    <string name="nav_arrive_at_dest">Ankunft %s</string>
+    <string name="nav_then">Dann</string>
+    <string name="nav_follow">Mir folgen</string>
+    <string name="nav_overview">Ganzen Weg zeigen</string>
+    <string name="nav_arrive_at">da um %s</string>
+    <string name="nav_spare">%d Min. Puffer</string>
+    <string name="nav_short">beeil dich, %d Min. zu knapp</string>
+    <string name="nav_exit">Navigation beenden</string>
+    <string name="nav_now">Jetzt</string>
+    <string name="walk_navigate">Diesen Fußweg navigieren</string>
 </resources>

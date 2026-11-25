@@ -44,7 +44,17 @@ data class MapLine(val points: List<Pair<Double, Double>>, val color: Color, val
 data class MapPoint(val id: String, val lat: Double, val lon: Double, val color: Color, val label: String? = null, val radius: Float = 6f)
 
 /** What the camera should show; a new value moves the camera. One point → zoom in on it, several → fit all. */
-data class MapCamera(val points: List<Pair<Double, Double>>, val zoom: Double = 15.0, val maxZoom: Double = 17.0)
+/**
+ * What the map should show. With [bearing] set it follows: centred on the first point, turned so [bearing] points
+ * up, tilted by [tilt]. That's the walking-navigation view.
+ */
+data class MapCamera(
+    val points: List<Pair<Double, Double>>,
+    val zoom: Double = 15.0,
+    val maxZoom: Double = 17.0,
+    val bearing: Double? = null,
+    val tilt: Double = 0.0,
+)
 
 // OpenFreeMap: free OSM vector tiles, no API key, no tracking.
 private const val STYLE_LIGHT = "https://tiles.openfreemap.org/styles/liberty"
@@ -89,6 +99,14 @@ private class MapHolder {
         // one bad coordinate must not take the app down (LatLng throws outside ±90/±180)
         val pts = camera?.points?.filter(::valid)?.takeIf { it.isNotEmpty() } ?: return
         val cam = camera!!.copy(points = pts)
+        if (cam.bearing != null) {
+            val follow = CameraUpdateFactory.newCameraPosition(
+                org.maplibre.android.camera.CameraPosition.Builder()
+                    .target(LatLng(pts[0].first, pts[0].second)).zoom(cam.zoom).bearing(cam.bearing).tilt(cam.tilt).build(),
+            )
+            if (animate) map.easeCamera(follow, 900) else map.moveCamera(follow)
+            return
+        }
         val update = if (cam.points.size == 1 || cam.points.distinct().size == 1) {
             CameraUpdateFactory.newLatLngZoom(LatLng(cam.points[0].first, cam.points[0].second), cam.zoom)
         } else {

@@ -46,6 +46,9 @@ object Store {
     var recentPlaces by mutableStateOf(listOf<Location>()); private set
     var recentJourneys by mutableStateOf(listOf<SavedJourney>()); private set
     var savedTrips by mutableStateOf(listOf<SavedTrip>()); private set
+    /** One-tap destinations on the journey tab. */
+    var home by mutableStateOf<Location?>(null); private set
+    var work by mutableStateOf<Location?>(null); private set
 
     // settings
     var theme by mutableStateOf("dark") // dark | light | system
@@ -62,6 +65,7 @@ object Store {
         // trips are kept until a day after arrival
         val cutoff = ZonedDateTime.now().minusDays(1)
         savedTrips = read("savedTrips", trips).filter { it.itinerary.legs.isNotEmpty() && (parseTime(it.itinerary.end) ?: cutoff) >= cutoff }.distinctBy { it.key }
+        home = readPlace("home"); work = readPlace("work")
         theme = prefs.getString("theme", "dark")!!
         dynamicColor = prefs.getBoolean("dynamicColor", false)
         onboarded = prefs.getBoolean("onboarded", false)
@@ -88,11 +92,33 @@ object Store {
         else prefs.edit().putBoolean("kofiDone", true).apply()
     }
 
+    // ----- home & work -----
+    private fun readPlace(key: String) = prefs.getString(key, null)?.let { runCatching { json.decodeFromString(Location.serializer(), it) }.getOrNull() }
+
+    fun saveHome(l: Location?) { home = l; writePlace("home", l) }
+    fun saveWork(l: Location?) { work = l; writePlace("work", l) }
+    private fun writePlace(key: String, l: Location?) =
+        prefs.edit().apply { if (l == null) remove(key) else putString(key, json.encodeToString(Location.serializer(), l)) }.apply()
+
+    /** Put back a trip removed by mistake (the Undo in the snackbar). */
+    fun restoreSaved(t: SavedTrip) {
+        if (isSavedKey(t.key)) return
+        savedTrips = (savedTrips + t).sortedBy { parseTime(it.itinerary.start) }
+        write("savedTrips", trips, savedTrips)
+    }
+
     // ----- favourites / history -----
     fun isFavorite(id: String) = favorites.any { it.id == id }
 
     fun toggleFavorite(loc: Location) {
         favorites = if (isFavorite(loc.id)) favorites.filterNot { it.id == loc.id } else favorites + loc
+        write("favorites", places, favorites)
+    }
+
+    /** Undo for a removed favourite: back where it was. */
+    fun restoreFavorite(loc: Location, at: Int) {
+        if (isFavorite(loc.id)) return
+        favorites = favorites.toMutableList().apply { add(at.coerceIn(0, size), loc) }
         write("favorites", places, favorites)
     }
 

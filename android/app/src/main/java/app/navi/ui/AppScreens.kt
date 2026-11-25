@@ -70,6 +70,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -112,6 +114,20 @@ private fun open(ctx: android.content.Context, url: String) =
 @Composable
 fun SavedTab(nav: Nav) {
     val ctx = LocalContext.current
+    val snackbar = remember { androidx.compose.material3.SnackbarHostState() }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val undo = stringResource(R.string.undo)
+    val tripRemoved = stringResource(R.string.trip_removed)
+    val favRemoved = stringResource(R.string.favorite_removed)
+    /** Removing is one tap, so it can be taken back for a few seconds. */
+    fun offerUndo(message: String, restore: () -> Unit) {
+        scope.launch {
+            snackbar.currentSnackbarData?.dismiss()
+            if (snackbar.showSnackbar(message, undo, duration = androidx.compose.material3.SnackbarDuration.Short) ==
+                androidx.compose.material3.SnackbarResult.ActionPerformed) restore()
+        }
+    }
+    Box(Modifier.fillMaxSize()) {
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
         item {
             Row(Modifier.padding(start = 20.dp, end = 8.dp, top = 16.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -123,7 +139,12 @@ fun SavedTab(nav: Nav) {
         if (Store.savedTrips.isEmpty()) item {
             MessageState(Icons.Filled.BookmarkBorder, stringResource(R.string.no_saved_trips))
         }
-        items(Store.savedTrips, key = { it.key }) { t -> SavedTripCard(t, nav) }
+        items(Store.savedTrips, key = { it.key }) { t ->
+            SavedTripCard(t, nav, Modifier.animateItem()) {
+                Store.toggleSavedKey(t.key, t.itinerary, t.from, t.to)
+                offerUndo(tripRemoved) { Store.restoreSaved(t) }
+            }
+        }
 
         val favs = Store.favorites
         if (favs.isNotEmpty()) {
@@ -133,9 +154,13 @@ fun SavedTab(nav: Nav) {
                     headlineContent = { Text(f.name, fontWeight = FontWeight.Medium) },
                     leadingContent = { Icon(Icons.Filled.Star, null, tint = MaterialTheme.colorScheme.primary) },
                     trailingContent = {
-                        IconButton(onClick = { Store.toggleFavorite(f) }) { Icon(Icons.Filled.Delete, stringResource(R.string.unfavorite)) }
+                        IconButton(onClick = {
+                            val at = Store.favorites.indexOfFirst { x -> x.id == f.id }
+                            Store.toggleFavorite(f)
+                            offerUndo(favRemoved.format(f.name)) { Store.restoreFavorite(f, at) }
+                        }) { Icon(Icons.Filled.Delete, stringResource(R.string.unfavorite)) }
                     },
-                    modifier = Modifier.clickableRow { nav.board(f) },
+                    modifier = Modifier.animateItem().clickableRow { nav.board(f) },
                 )
             }
         }
@@ -144,23 +169,30 @@ fun SavedTab(nav: Nav) {
             SupportCard { open(ctx, KOFI_URL) }
         }
     }
+    androidx.compose.material3.SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(16.dp))
+    }
 }
 
 @Composable
-private fun SavedTripCard(t: SavedTrip, nav: Nav) {
+private fun SavedTripCard(t: SavedTrip, nav: Nav, modifier: Modifier = Modifier, onRemove: () -> Unit) {
     val it = t.itinerary
     val start = parseTime(it.start)
-    val past = (parseTime(it.end) ?: ZonedDateTime.now()).isBefore(ZonedDateTime.now())
+    val now = ZonedDateTime.now()
+    val past = (parseTime(it.end) ?: now).isBefore(now)
+    // today and still ahead: how long until it leaves reads faster than the date
+    val minsLeft = start?.takeIf { s -> s.isAfter(now) && s.toLocalDate() == now.toLocalDate() }
+        ?.let { s -> java.time.Duration.between(now, s).toMinutes() }
     val cancelled = it.legs.any { l -> l.cancelled || l.from.cancelled || l.to.cancelled }
     ElevatedCard(
         onClick = { JourneyForm.selected = it; nav.itinerary() },
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
         shape = RoundedCornerShape(24.dp),
     ) {
         Row(Modifier.padding(start = 20.dp, top = 16.dp, bottom = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    start?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)).orEmpty(),
+                    if (minsLeft != null && minsLeft <= 120) stringResource(R.string.status_departs_in, minsLeft)
+                    else start?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)).orEmpty(),
                     style = MaterialTheme.typography.labelLarge,
                     color = if (cancelled) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                 )
@@ -171,7 +203,7 @@ private fun SavedTripCard(t: SavedTrip, nav: Nav) {
                 )
                 if (cancelled) Text(stringResource(R.string.part_cancelled), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
             }
-            IconButton(onClick = { Store.toggleSavedKey(t.key, it, t.from, t.to) }) { Icon(Icons.Filled.Delete, stringResource(R.string.unsave_trip)) }
+            IconButton(onClick = onRemove) { Icon(Icons.Filled.Delete, stringResource(R.string.unsave_trip)) }
         }
     }
 }

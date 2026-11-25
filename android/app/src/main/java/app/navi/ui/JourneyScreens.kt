@@ -1,6 +1,8 @@
 package app.navi.ui
 
 import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Navigation
+import app.navi.currentWalk
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.ui.text.withStyle
@@ -145,6 +147,7 @@ fun delayOf(actual: String?, scheduled: String?, realtime: Boolean): Int? {
 @Composable
 fun JourneyTab(nav: Nav) {
     val ctx = LocalContext.current
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
     var picking by rememberSaveable { mutableStateOf<String?>(null) } // "from" | "to"
 
     // Idiot-proof default: start where you are.
@@ -170,6 +173,7 @@ fun JourneyTab(nav: Nav) {
                 Icon(Icons.AutoMirrored.Filled.Chat, stringResource(R.string.ask_entry))
             }
         }
+        NowCard(nav, Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp))
         ElevatedCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp), shape = RoundedCornerShape(28.dp)) {
             Box {
                 Column(Modifier.padding(vertical = 8.dp)) {
@@ -178,7 +182,7 @@ fun JourneyTab(nav: Nav) {
                     PlaceField(stringResource(R.string.to), JourneyForm.to, stringResource(R.string.choose_destination), dotFilled = false) { picking = "to" }
                 }
                 FilledTonalIconButton(
-                    onClick = { JourneyForm.swap() },
+                    onClick = { haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.SegmentTick); JourneyForm.swap() },
                     modifier = Modifier.align(Alignment.CenterEnd).padding(end = 12.dp),
                 ) { Icon(Icons.Filled.SwapVert, stringResource(R.string.swap)) }
             }
@@ -209,6 +213,8 @@ fun JourneyTab(nav: Nav) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+
+        HomeWorkRow(nav, Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp))
 
         if (Store.recentJourneys.isNotEmpty()) {
             SectionHeader(stringResource(R.string.recent))
@@ -573,6 +579,20 @@ fun ItineraryScreen(nav: Nav) {
                     Text(stringResource(if (following) R.string.live_stop else R.string.live_start))
                 }
             }
+            // walking right now: turn-by-turn to the platform
+            currentWalk(it, ZonedDateTime.now())?.let { w ->
+                item(key = "navigate") {
+                    Button(
+                        onClick = { openWalkNavigation(it, w, nav) },
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).height(56.dp),
+                        shapes = ButtonDefaults.shapes(),
+                    ) {
+                        Icon(Icons.Filled.Navigation, null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.walk_navigate), style = MaterialTheme.typography.titleMedium)
+                    }
+                }
+            }
             item { Failover(it, nav) }
             item {
                 NaviMap(
@@ -591,6 +611,12 @@ fun ItineraryScreen(nav: Nav) {
             }
         }
     }
+}
+
+/** Walk number [i] of [it] in navigation mode, with the ride it leads to. */
+fun openWalkNavigation(it: Itinerary, i: Int, nav: Nav) {
+    WalkContext.set(it.legs[i], it.legs.drop(i + 1).firstOrNull { l -> !l.isWalk }, navigate = true)
+    nav.walk()
 }
 
 /** Where the trip breaks, if it does: a cancelled ride, or a change that live times no longer allow. */

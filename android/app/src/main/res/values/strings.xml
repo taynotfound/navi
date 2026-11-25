@@ -348,5 +348,31 @@
     <string name="percent">%d%%</string>
     <plurals name="a11y_in_minutes"><item quantity="one">in %d minute</item><item quantity="other">in %d minutes</item></plurals>
     <string name="assistant_setting">Show “Ask Navi”</string>
-    <string name="assistant_setting_hint">The assistant button on the journey tab</string>
+    <string name="now_following">Following live</string>
+    <string name="now_next_trip">Your next trip</string>
+    <string name="open_trip">Open trip</string>
+    <string name="home_place">Home</string>
+    <string name="work_place">Work</string>
+    <string name="set_home">Where is home?</string>
+    <string name="set_work">Where is work?</string>
+    <string name="change_place">Change %s</string>
+    <string name="tap_to_set">Tap to set</string>
+    <string name="undo">Undo</string>
+    <string name="trip_removed">Trip removed</string>
+    <string name="favorite_removed">%s removed</string>
+    <string name="assistant_setting_hint">The chat button next to “Where to?”</string>
+    <string name="nav_start">Navigate</string>
+    <string name="nav_arrived">You’re there</string>
+    <string name="nav_off_route">Off the path</string>
+    <string name="nav_off_route_hint">Head back to the line · %s to go</string>
+    <string name="nav_arrive_at_dest">Arrive at %s</string>
+    <string name="nav_then">Then</string>
+    <string name="nav_follow">Follow me</string>
+    <string name="nav_overview">Show the whole walk</string>
+    <string name="nav_arrive_at">there at %s</string>
+    <string name="nav_spare">%d min to spare</string>
+    <string name="nav_short">hurry, %d min short</string>
+    <string name="nav_exit">Stop navigation</string>
+    <string name="nav_now">Now</string>
+    <string name="walk_navigate">Navigate this walk</string>
 </resources>
