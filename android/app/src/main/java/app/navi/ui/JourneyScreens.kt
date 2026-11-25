@@ -72,6 +72,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -203,8 +204,8 @@ fun JourneyTab(nav: Nav) {
             )
         }
 
-        // "Frag Navi": ask in your own words instead of filling the form
-        androidx.compose.material3.OutlinedButton(
+        // "Frag Navi": ask in your own words instead of filling the form (can be hidden in Settings)
+        if (Store.assistantEnabled) androidx.compose.material3.OutlinedButton(
             onClick = nav::assistant,
             shapes = ButtonDefaults.shapes(),
             modifier = Modifier.padding(start = 16.dp, top = 12.dp).height(48.dp),
@@ -303,6 +304,7 @@ fun ResultsScreen(nav: Nav) {
                 val p = Api.plan(
                     from.id, to.id, JourneyForm.time?.toOffsetDateTime()?.toString(), JourneyForm.arriveBy,
                     JourneyForm.wheelchair, JourneyForm.bike, cursor, JourneyForm.modes,
+                    JourneyForm.via?.id, JourneyForm.minTransfer, JourneyForm.walkSpeed,
                 )
                 val merged = when (where) { "earlier" -> p.itineraries + items; "later" -> items + p.itineraries; else -> p.itineraries }
                 items = merged.distinctBy(::key).sortedBy { parseTime(it.start) }
@@ -317,7 +319,8 @@ fun ResultsScreen(nav: Nav) {
             }
         }
     }
-    LaunchedEffect(from.id, to.id, JourneyForm.time, JourneyForm.arriveBy, JourneyForm.wheelchair, JourneyForm.bike, JourneyForm.modes) { load(null, "initial") }
+    LaunchedEffect(from.id, to.id, JourneyForm.time, JourneyForm.arriveBy, JourneyForm.wheelchair, JourneyForm.bike, JourneyForm.modes,
+        JourneyForm.via, JourneyForm.minTransfer, JourneyForm.walkSpeed) { load(null, "initial") }
 
     Scaffold(
         topBar = {
@@ -547,6 +550,17 @@ fun ItineraryScreen(nav: Nav) {
                             ctx.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text), shareTitle))
                         }
                     }) { Icon(Icons.Filled.Share, shareTitle) }
+                    IconButton(onClick = {
+                        // the device's calendar app fills in an event; nothing is written without the user saving it
+                        val add = Intent(Intent.ACTION_INSERT, android.provider.CalendarContract.Events.CONTENT_URI)
+                            .putExtra(android.provider.CalendarContract.EXTRA_EVENT_BEGIN_TIME, parseTime(it.start)?.toInstant()?.toEpochMilli())
+                            .putExtra(android.provider.CalendarContract.EXTRA_EVENT_END_TIME, parseTime(it.end)?.toInstant()?.toEpochMilli())
+                            .putExtra(android.provider.CalendarContract.Events.TITLE, "$fromName – $toName")
+                            .putExtra(android.provider.CalendarContract.Events.EVENT_LOCATION, fromName)
+                            .putExtra(android.provider.CalendarContract.Events.DESCRIPTION, summary)
+                        runCatching { ctx.startActivity(add) }
+                            .onFailure { android.widget.Toast.makeText(ctx, R.string.no_calendar_app, android.widget.Toast.LENGTH_SHORT).show() }
+                    }) { Icon(Icons.Filled.EventAvailable, stringResource(R.string.add_to_calendar)) }
                 },
             )
         },
@@ -624,7 +638,8 @@ private fun Failover(it: Itinerary, nav: Nav) {
     var alts by remember(br.from.id, br.keep) { mutableStateOf<List<Itinerary>?>(null) }
     var failed by remember(br.from.id, br.keep) { mutableStateOf(false) }
     LaunchedEffect(br.from.id, br.keep) {
-        runCatching { Api.plan(br.from.id, dest, br.time.toOffsetDateTime().toString(), false, JourneyForm.wheelchair, JourneyForm.bike, modes = JourneyForm.modes) }
+        runCatching { Api.plan(br.from.id, dest, br.time.toOffsetDateTime().toString(), false, JourneyForm.wheelchair, JourneyForm.bike, modes = JourneyForm.modes,
+            minTransfer = JourneyForm.minTransfer, walkSpeed = JourneyForm.walkSpeed) }
             .onSuccess { p -> alts = p.itineraries.filter { a -> a.legs.any { l -> !l.isWalk } }.take(3) }
             .onFailure { failed = true }
     }

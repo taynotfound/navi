@@ -330,7 +330,22 @@ func (a *App) plan(ctx context.Context, q url.Values) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	key := fmt.Sprint("plan|", from, "|", to, "|", at.Truncate(time.Minute).Unix(), arriveBy, bike, wheelchair, "|", modes, "|", cursor)
+	// optional: one stop to pass through, extra minutes per change, walking pace
+	via := q.Get("via")
+	if via != "" && (reLatLon.MatchString(via) || strings.ContainsAny(via, "\n\r\t ")) {
+		return nil, badRequest("via must be a stop id")
+	}
+	minTransfer := 0
+	if v := q.Get("minTransfer"); v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil || n < 0 || n > 30 {
+			return nil, badRequest("minTransfer must be 0-30 minutes")
+		}
+		minTransfer = n
+	}
+	walkSpeed := map[string]string{"slow": "0.9", "fast": "1.6"}[q.Get("walk")]
+	key := fmt.Sprint("plan|", from, "|", to, "|", at.Truncate(time.Minute).Unix(), arriveBy, bike, wheelchair, "|", modes, "|", cursor,
+		"|", via, "|", minTransfer, "|", walkSpeed)
 	return cached(a.cache, key, time.Minute, func() (Plan, error) {
 		params := url.Values{
 			"fromPlace": {from}, "toPlace": {to}, "time": {at.UTC().Format(time.RFC3339)},
@@ -345,6 +360,15 @@ func (a *App) plan(ctx context.Context, q url.Values) (any, error) {
 		}
 		if modes != "" {
 			params.Set("transitModes", modes)
+		}
+		if via != "" {
+			params.Set("via", via)
+		}
+		if minTransfer > 0 {
+			params.Set("minTransferTime", strconv.Itoa(minTransfer))
+		}
+		if walkSpeed != "" && !wheelchair {
+			params.Set("pedestrianSpeed", walkSpeed)
 		}
 		var raw motisPlan
 		if err := a.motis.get(ctx, "/api/v5/plan", params, &raw); err != nil {

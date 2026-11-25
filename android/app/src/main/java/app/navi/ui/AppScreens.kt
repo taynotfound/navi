@@ -256,6 +256,9 @@ fun SettingsScreen(nav: Nav) {
                 SwitchRow(stringResource(R.string.step_free_default), stringResource(R.string.step_free_default_hint), Store.wheelchairDefault) {
                     Store.wheelchairDefault = it; JourneyForm.wheelchair = it; Store.saveSettings()
                 }
+                SwitchRow(stringResource(R.string.assistant_setting), stringResource(R.string.assistant_setting_hint), Store.assistantEnabled) {
+                    Store.assistantEnabled = it; Store.saveSettings()
+                }
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.clear_history)) },
                     supportingContent = { Text(stringResource(R.string.clear_history_hint)) },

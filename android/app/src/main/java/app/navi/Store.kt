@@ -52,6 +52,7 @@ object Store {
     var dynamicColor by mutableStateOf(false)
     var onboarded by mutableStateOf(false)
     var wheelchairDefault by mutableStateOf(false)
+    var assistantEnabled by mutableStateOf(true) // "Frag Navi" button on the journey tab
 
     fun init(context: Context) {
         prefs = context.applicationContext.getSharedPreferences("navi", Context.MODE_PRIVATE)
@@ -65,6 +66,7 @@ object Store {
         dynamicColor = prefs.getBoolean("dynamicColor", false)
         onboarded = prefs.getBoolean("onboarded", false)
         wheelchairDefault = prefs.getBoolean("wheelchairDefault", false)
+        assistantEnabled = prefs.getBoolean("assistantEnabled", true)
         JourneyForm.wheelchair = wheelchairDefault
         prefs.edit().putInt("launches", prefs.getInt("launches", 0) + 1)
             .apply { if (!prefs.contains("firstLaunch")) putLong("firstLaunch", System.currentTimeMillis()) }.apply()
@@ -72,7 +74,8 @@ object Store {
 
     fun saveSettings() = prefs.edit()
         .putString("theme", theme).putBoolean("dynamicColor", dynamicColor)
-        .putBoolean("onboarded", onboarded).putBoolean("wheelchairDefault", wheelchairDefault).apply()
+        .putBoolean("onboarded", onboarded).putBoolean("wheelchairDefault", wheelchairDefault)
+        .putBoolean("assistantEnabled", assistantEnabled).apply()
 
     // ----- support prompt: once, after a week and ~10 launches, never again after a decision -----
     fun shouldAskForSupport(): Boolean {
@@ -153,9 +156,62 @@ object JourneyForm {
     var wheelchair by mutableStateOf(false)
     var bike by mutableStateOf(false)
     var modes by mutableStateOf<Set<String>>(emptySet()) // type filter: long, regional, suburban, subway, tram, bus, ferry; empty = all
+    var via by mutableStateOf<Location?>(null) // one stop to pass through
+    var minTransfer by mutableStateOf(0) // extra minutes for every change
+    var walkSpeed by mutableStateOf("normal") // slow | normal | fast
     var selected by mutableStateOf<Itinerary?>(null)
 
     fun swap() { val f = from; from = to; to = f }
+
+    /** Only regional and local transport: what the Deutschlandticket covers. */
+    val dTicketModes = setOf("regional", "suburban", "subway", "tram", "bus", "ferry")
+}
+
+/**
+ * What's on screen, written when the app goes to the background and read back if Android killed the process
+ * meanwhile. The nav back stack restores itself; without this the trip, walk and form behind it would be empty.
+ */
+object Session {
+    @Serializable
+    private data class Snapshot(
+        val tab: Int = 0,
+        val from: Location? = null,
+        val to: Location? = null,
+        val via: Location? = null,
+        val time: String? = null,
+        val arriveBy: Boolean = false,
+        val wheelchair: Boolean = false,
+        val bike: Boolean = false,
+        val modes: Set<String> = emptySet(),
+        val minTransfer: Int = 0,
+        val walkSpeed: String = "normal",
+        val selected: Itinerary? = null,
+        val walk: Leg? = null,
+        val walkNext: Leg? = null,
+    )
+
+    private val json = Json { ignoreUnknownKeys = true }
+    private fun file(ctx: Context) = java.io.File(ctx.noBackupFilesDir, "session.json")
+
+    fun save(ctx: Context) {
+        val f = JourneyForm
+        val s = Snapshot(
+            HomeTab.current, f.from, f.to, f.via, f.time?.toString(), f.arriveBy, f.wheelchair, f.bike, f.modes,
+            f.minTransfer, f.walkSpeed, f.selected, app.navi.ui.WalkContext.walk, app.navi.ui.WalkContext.next,
+        )
+        runCatching { file(ctx).writeText(json.encodeToString(Snapshot.serializer(), s)) }
+    }
+
+    fun restore(ctx: Context) {
+        val s = runCatching { json.decodeFromString(Snapshot.serializer(), file(ctx).readText()) }.getOrNull() ?: return
+        val f = JourneyForm
+        HomeTab.current = s.tab
+        f.from = s.from; f.to = s.to; f.via = s.via
+        f.time = s.time?.let { runCatching { ZonedDateTime.parse(it) }.getOrNull() }
+        f.arriveBy = s.arriveBy; f.wheelchair = s.wheelchair; f.bike = s.bike; f.modes = s.modes
+        f.minTransfer = s.minTransfer; f.walkSpeed = s.walkSpeed; f.selected = s.selected
+        s.walk?.let { app.navi.ui.WalkContext.set(it, s.walkNext) }
+    }
 }
 
 fun myLocation(lat: Double, lon: Double) = Location(id = "$lat,$lon", type = "GPS", name = L.s(R.string.my_location), lat = lat, lon = lon)

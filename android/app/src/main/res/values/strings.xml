@@ -319,4 +319,33 @@
     <string name="alert_open_alternatives">Open Navi for alternatives.</string>
     <string name="reminder_title">To %1$s at %2$s</string>
     <string name="reminder_text">In %1$d min: %2$s from %3$s</string>
+    <!-- offline copy, route options, calendar, widget, settings -->
+    <string name="offline_banner">Offline · showing data from %1$s</string>
+    <string name="d_ticket">Deutschlandticket</string>
+    <string name="more_options">More options</string>
+    <string name="more_options_n">More options (%d)</string>
+    <string name="reset">Reset</string>
+    <string name="via_stop">Via stop</string>
+    <string name="via_none">Choose a stop</string>
+    <string name="remove_via">Remove via stop</string>
+    <string name="change_time">Extra time to change (min)</string>
+    <string name="change_time_normal">Normal</string>
+    <string name="walk_pace">Walking pace</string>
+    <string name="walk_slow">Slow</string>
+    <string name="walk_normal">Normal</string>
+    <string name="walk_fast">Fast</string>
+    <string name="walk_pace_step_free">Step-free routes use their own pace.</string>
+    <string name="add_to_calendar">Add to calendar</string>
+    <string name="no_calendar_app">No calendar app found</string>
+    <string name="widget_label">Navi departures</string>
+    <string name="widget_description">Next departures at your favourite stop</string>
+    <string name="widget_empty">Star a stop in Navi to see its departures here.</string>
+    <string name="widget_no_departures">No departures right now.</string>
+    <string name="widget_next_stop">Next favourite stop</string>
+    <string name="widget_offline">offline</string>
+    <string name="refresh">Refresh</string>
+    <string name="percent">%d%%</string>
+    <plurals name="a11y_in_minutes"><item quantity="one">in %d minute</item><item quantity="other">in %d minutes</item></plurals>
+    <string name="assistant_setting">Show “Ask Navi”</string>
+    <string name="assistant_setting_hint">The assistant button on the journey tab</string>
 </resources>

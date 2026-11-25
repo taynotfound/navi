@@ -9,6 +9,19 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -58,7 +71,9 @@ class MainActivity : AppCompatActivity() {
         L.ctx = this
         MapLibre.getInstance(this)
         Store.init(this)
-        handleLink(intent)
+        // Back after Android dropped the process: put the screens' data back before the nav stack restores them.
+        // A recreated activity (rotation, process death) has already handled its launch intent.
+        if (savedInstanceState != null) Session.restore(this) else handleLink(intent)
         setContent {
             NaviTheme {
                 val dark = isAppDark()
@@ -70,6 +85,11 @@ class MainActivity : AppCompatActivity() {
                 else NaviApp()
             }
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Session.save(this)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -85,6 +105,9 @@ class MainActivity : AppCompatActivity() {
                 JourneyForm.from = j.from; JourneyForm.to = j.to; DeepLink.openResults = true
             }
         }
+        intent?.getStringExtra("board")?.let { s ->
+            runCatching { kotlinx.serialization.json.Json.decodeFromString(Location.serializer(), s) }.getOrNull()?.let { DeepLink.openBoard = it }
+        }
         val uri: Uri = intent?.data ?: return
         val id = uri.getQueryParameter("id")
             ?: uri.pathSegments.takeIf { it.size == 2 && it[0] == "j" }?.get(1)
@@ -96,6 +119,7 @@ object DeepLink {
     var shareId by mutableStateOf<String?>(null)
     var openTracked by mutableStateOf(false)
     var openResults by mutableStateOf(false)
+    var openBoard by mutableStateOf<Location?>(null) // from the home-screen widget
 }
 
 object HomeTab {
@@ -143,6 +167,12 @@ fun NaviApp() {
     }
     LaunchedEffect(Store.savedTrips) { runCatching { Reminders.sync(ctx) } }
     LaunchedEffect(Store.recentJourneys) { Shortcuts.sync(ctx) }
+    LaunchedEffect(Store.favorites) { runCatching { DeparturesWidget.updateAll(ctx) } }
+    LaunchedEffect(DeepLink.openBoard) {
+        val stop = DeepLink.openBoard ?: return@LaunchedEffect
+        DeepLink.openBoard = null
+        nav.board(stop)
+    }
 
     LaunchedEffect(DeepLink.shareId) {
         val id = DeepLink.shareId ?: return@LaunchedEffect
@@ -150,6 +180,7 @@ fun NaviApp() {
         runCatching { Api.shared(id) }.onSuccess { JourneyForm.selected = it; nav.itinerary() }
     }
 
+    Box(Modifier.fillMaxSize()) {
     NavHost(nc, startDestination = "home") {
         composable("home") { Home(nav) }
         composable("results") { ResultsScreen(nav) }
@@ -170,7 +201,28 @@ fun NaviApp() {
         }
         composable("station?id={id}&name={name}") { e -> StationScreen(e.arguments!!.getString("id")!!, e.arguments!!.getString("name").orEmpty(), nav) }
     }
+    Api.staleSince?.let { OfflineBanner(it, Modifier.align(Alignment.BottomCenter)) }
+    }
     if (askSupport) SupportDialog { askSupport = false }
+}
+
+/** Shown while screens run on the offline copy, so nobody mistakes it for live data. */
+@Composable
+private fun OfflineBanner(since: Long, modifier: Modifier) {
+    val time = hhmm(java.time.Instant.ofEpochMilli(since).atZone(java.time.ZoneId.systemDefault()))
+    Surface(
+        modifier.navigationBarsPadding().padding(bottom = 88.dp).semantics { liveRegion = LiveRegionMode.Polite },
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.inverseSurface,
+        contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+        shadowElevation = 3.dp,
+    ) {
+        Row(Modifier.padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.CloudOff, null, Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.offline_banner, time), style = MaterialTheme.typography.labelLarge)
+        }
+    }
 }
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
@@ -189,7 +241,7 @@ private fun Home(nav: Nav) {
                     ShortNavigationBarItem(
                         selected = HomeTab.current == i,
                         onClick = { HomeTab.current = i },
-                        icon = { Icon(icon, null) },
+                        icon = { Icon(icon, null) }, // the label below names it
                         label = { Text(stringResource(label)) },
                     )
                 }

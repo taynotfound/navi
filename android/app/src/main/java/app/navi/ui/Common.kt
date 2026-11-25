@@ -163,11 +163,13 @@ fun TimeColumn(scheduled: String?, actual: String?, delay: Int?, cancelled: Bool
 fun Countdown(time: String?, cancelled: Boolean) {
     val m = minutesUntil(time) ?: return
     if (cancelled || m > 59 || m < -1) return
+    val spoken = if (m <= 0) stringResource(R.string.now) else pluralStringResource(R.plurals.a11y_in_minutes, m.toInt(), m.toInt())
     Text(
         if (m <= 0) stringResource(R.string.now) else stringResource(R.string.in_min, m),
         style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.primary,
         fontWeight = FontWeight.Bold,
+        modifier = Modifier.semantics { contentDescription = spoken }, // "in 4 minutes", not "in 4 Min dot"
     )
 }
 

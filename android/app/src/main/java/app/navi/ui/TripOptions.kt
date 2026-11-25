@@ -18,6 +18,10 @@ import androidx.compose.material.icons.automirrored.filled.Accessible
 import androidx.compose.material.icons.automirrored.filled.DirectionsBike
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ConfirmationNumber
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Tune
@@ -69,6 +73,7 @@ val modeFilters = listOf(
 fun TripOptionChips(modifier: Modifier = Modifier) {
     var timeDialog by remember { mutableStateOf(false) }
     var modesDialog by remember { mutableStateOf(false) }
+    var moreDialog by remember { mutableStateOf(false) }
     FlowRow(modifier, horizontalArrangement = ItemSpacing) {
         FilterChip(
             selected = JourneyForm.time != null,
@@ -94,9 +99,83 @@ fun TripOptionChips(modifier: Modifier = Modifier) {
             label = { Text(stringResource(R.string.with_bike)) },
             leadingIcon = { Icon(Icons.AutoMirrored.Filled.DirectionsBike, null, Modifier.size(18.dp)) },
         )
+        val dTicket = JourneyForm.modes == JourneyForm.dTicketModes
+        FilterChip(
+            selected = dTicket,
+            onClick = { JourneyForm.modes = if (dTicket) emptySet() else JourneyForm.dTicketModes },
+            label = { Text(stringResource(R.string.d_ticket)) },
+            leadingIcon = { Icon(Icons.Filled.ConfirmationNumber, null, Modifier.size(18.dp)) },
+        )
+        FilterChip(
+            selected = moreCount() > 0,
+            onClick = { moreDialog = true },
+            label = { Text(if (moreCount() > 0) stringResource(R.string.more_options_n, moreCount()) else stringResource(R.string.more_options)) },
+            leadingIcon = { Icon(Icons.Filled.MoreHoriz, null, Modifier.size(18.dp)) },
+        )
     }
     if (timeDialog) TimeDialog { timeDialog = false }
     if (modesDialog) ModesDialog { modesDialog = false }
+    if (moreDialog) MoreOptionsDialog { moreDialog = false }
+}
+
+private fun moreCount() = listOf(JourneyForm.via != null, JourneyForm.minTransfer > 0, JourneyForm.walkSpeed != "normal").count { it }
+
+private val transferChoices = listOf(0, 5, 10, 15)
+private val walkChoices = listOf("slow", "normal", "fast")
+
+/** Via stop, extra time per change, walking pace. Applied straight away, like the other chips. */
+@Composable
+private fun MoreOptionsDialog(onClose: () -> Unit) {
+    var pickVia by remember { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = onClose,
+        confirmButton = { TextButton(onClick = onClose) { Text(stringResource(R.string.done)) } },
+        dismissButton = {
+            TextButton(onClick = { JourneyForm.via = null; JourneyForm.minTransfer = 0; JourneyForm.walkSpeed = "normal" }) {
+                Text(stringResource(R.string.reset))
+            }
+        },
+        title = { Text(stringResource(R.string.more_options)) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.via_stop), style = MaterialTheme.typography.titleSmall)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    FilterChip(
+                        selected = JourneyForm.via != null,
+                        onClick = { pickVia = true },
+                        label = { Text(JourneyForm.via?.name ?: stringResource(R.string.via_none), maxLines = 1) },
+                        leadingIcon = { Icon(Icons.Filled.Place, null, Modifier.size(18.dp)) },
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    if (JourneyForm.via != null) IconButton(onClick = { JourneyForm.via = null }) {
+                        Icon(Icons.Filled.Close, stringResource(R.string.remove_via))
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                Text(stringResource(R.string.change_time), style = MaterialTheme.typography.titleSmall)
+                ConnectedChoice(
+                    transferChoices.map { if (it == 0) stringResource(R.string.change_time_normal) else "+$it" },
+                    transferChoices.indexOf(JourneyForm.minTransfer).coerceAtLeast(0),
+                    { JourneyForm.minTransfer = transferChoices[it] },
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(stringResource(R.string.walk_pace), style = MaterialTheme.typography.titleSmall)
+                ConnectedChoice(
+                    listOf(stringResource(R.string.walk_slow), stringResource(R.string.walk_normal), stringResource(R.string.walk_fast)),
+                    walkChoices.indexOf(JourneyForm.walkSpeed).coerceAtLeast(1),
+                    { JourneyForm.walkSpeed = walkChoices[it] },
+                )
+                if (JourneyForm.wheelchair) Text(
+                    stringResource(R.string.walk_pace_step_free),
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+    )
+    if (pickVia) PlacePicker(
+        stringResource(R.string.via_stop), { pickVia = false }, { JourneyForm.via = it; pickVia = false },
+        stopsOnly = true, allowMyLocation = false,
+    )
 }
 
 @Composable

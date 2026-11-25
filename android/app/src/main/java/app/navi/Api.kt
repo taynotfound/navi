@@ -1,5 +1,8 @@
 package app.navi
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
@@ -210,7 +213,8 @@ private data class AssistantRequest(val messages: List<ChatMessage>, val lang: S
 
 // ---------- client ----------
 
-class ApiException(message: String) : Exception(message)
+/** [offline]: no answer at all (no network, timeout), as opposed to an error from the server. */
+class ApiException(message: String, val offline: Boolean = false) : Exception(message)
 
 object Api {
     private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
@@ -227,6 +231,7 @@ object Api {
     suspend fun plan(
         from: String, to: String, time: String?, arriveBy: Boolean,
         wheelchair: Boolean, bike: Boolean, cursor: String? = null, modes: Set<String> = emptySet(),
+        via: String? = null, minTransfer: Int = 0, walkSpeed: String = "normal",
     ) = get(
         "/v1/plan",
         mapOf(
@@ -235,6 +240,9 @@ object Api {
             "wheelchair" to if (wheelchair) "1" else null,
             "bike" to if (bike) "1" else null,
             "modes" to modes.takeIf { it.isNotEmpty() }?.sorted()?.joinToString(","),
+            "via" to via,
+            "minTransfer" to minTransfer.takeIf { it > 0 }?.toString(),
+            "walk" to walkSpeed.takeIf { it != "normal" },
         ),
         Plan.serializer(),
     )
@@ -262,12 +270,46 @@ object Api {
         json.encodeToString(AssistantRequest.serializer(), AssistantRequest(messages.takeLast(12), lang, lat, lon)),
     )
 
-    /** GET, or POST with a JSON [body]. */
+    /**
+     * When the last answer came from the offline copy: the time that copy was fetched (epoch ms), else null.
+     * Any fresh answer clears it. The app shows a "not live" banner while it's set.
+     */
+    var staleSince by mutableStateOf<Long?>(null); private set
+
+    /** Answers worth keeping for a dead zone: boards, routes, trips and station info. */
+    private val offlinePaths = setOf("/v1/board", "/v1/plan", "/v1/trip", "/v1/station", "/v1/nearby")
+    private const val OFFLINE_MAX_AGE = 6 * 3600_000L
+
+    private fun offlineFile(url: String): java.io.File? {
+        if (!L.ready) return null
+        val name = java.security.MessageDigest.getInstance("SHA-1").digest(url.toByteArray()).joinToString("") { "%02x".format(it) }
+        return java.io.File(L.ctx.cacheDir, "api").apply { mkdirs() }.resolve(name)
+    }
+
+    /** GET, or POST with a JSON [body]. GETs in [offlinePaths] fall back to the last good answer when offline. */
     private suspend fun <T> get(path: String, params: Map<String, String?>, serializer: KSerializer<T>, body: String? = null): T =
         withContext(Dispatchers.IO) {
             val query = params.filterValues { it != null }
                 .entries.joinToString("&") { (k, v) -> "$k=${URLEncoder.encode(v, "UTF-8")}" }
-            val conn = URL("${BuildConfig.API_URL}$path?$query").openConnection() as HttpURLConnection
+            val url = "${BuildConfig.API_URL}$path?$query"
+            val keep = body == null && path in offlinePaths
+            try {
+                val (text, value) = fetch(url, serializer, body)
+                if (keep) runCatching { offlineFile(url)?.writeText(text) }
+                staleSince = null
+                value
+            } catch (e: ApiException) {
+                val copy = (if (keep && e.offline) offlineFile(url) else null)
+                    ?.takeIf { it.exists() && System.currentTimeMillis() - it.lastModified() < OFFLINE_MAX_AGE }
+                    ?: throw e
+                val value = runCatching { json.decodeFromString(serializer, copy.readText()) }.getOrElse { throw e }
+                staleSince = copy.lastModified()
+                value
+            }
+        }
+
+    private fun <T> fetch(url: String, serializer: KSerializer<T>, body: String?): Pair<String, T> {
+            val conn = URL(url).openConnection() as HttpURLConnection
             try {
                 conn.connectTimeout = 10_000
                 conn.readTimeout = 30_000
@@ -288,15 +330,15 @@ object Api {
                     val msg = runCatching { json.parseToJsonElement(text).jsonObject["error"]?.jsonPrimitive?.content }.getOrNull()
                     throw ApiException(friendlyError(code, msg))
                 }
-                json.decodeFromString(serializer, text)
+                return text to json.decodeFromString(serializer, text)
             } catch (e: SocketTimeoutException) {
-                throw ApiException(L.s(R.string.err_timeout))
+                throw ApiException(L.s(R.string.err_timeout), offline = true)
             } catch (e: IOException) {
-                throw ApiException(L.s(R.string.err_offline))
+                throw ApiException(L.s(R.string.err_offline), offline = true)
             } finally {
                 conn.disconnect()
             }
-        }
+    }
 
     private fun friendlyError(code: Int, msg: String?) = when (code) {
         400 -> L.s(R.string.err_bad_request)

@@ -80,6 +80,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -556,7 +559,8 @@ private fun AccessChip(label: String, value: String) {
         "false" -> stringResource(R.string.no) to StatusColors.veryLate
         else -> stringResource(R.string.unknown) to MaterialTheme.colorScheme.onSurfaceVariant
     }
-    AssistChip(onClick = {}, label = { Text("$label: $text") }, leadingIcon = { Box(Modifier.size(10.dp).clip(CircleShape).background(color)) })
+    // read as one statement, not as a button that does nothing
+    AssistChip(onClick = {}, modifier = Modifier.clearAndSetSemantics { contentDescription = "$label: $text" }, label = { Text("$label: $text") }, leadingIcon = { Box(Modifier.size(10.dp).clip(CircleShape).background(color)) })
 }
 
 @Composable
@@ -575,6 +579,7 @@ private fun EquipmentRow(e: Equipment) {
     }
     val kind = stringResource(if (e.type == "lift") R.string.lift else R.string.escalator)
     ListItem(
+        modifier = Modifier.semantics(mergeDescendants = true) {},
         headlineContent = { Text(e.name.ifBlank { kind }) },
         supportingContent = { Text(kind) },
         leadingContent = { Icon(if (e.type == "lift") Icons.Filled.Elevator else Icons.Filled.Escalator, null) },

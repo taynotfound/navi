@@ -106,7 +106,7 @@ fun PunctualitySection(line: String, operator: String?, stopId: String?) {
                 Box(Modifier.weight(1f).height(12.dp).clip(RoundedCornerShape(6.dp)).background(c.surfaceContainerHighest)) {
                     Box(Modifier.fillMaxHeight().fillMaxWidth(pct.coerceIn(0, 100) / 100f).clip(RoundedCornerShape(6.dp)).background(colors[i]))
                 }
-                Text("$pct %", Modifier.width(48.dp).padding(start = 8.dp), style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.percent, pct), Modifier.width(48.dp).padding(start = 8.dp), style = MaterialTheme.typography.labelMedium)
             }
         }
         if (data.bands.isNotEmpty()) {

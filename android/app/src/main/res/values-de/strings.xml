@@ -304,4 +304,33 @@
     <string name="alert_open_alternatives">Öffne Navi für Alternativen.</string>
     <string name="reminder_title">Nach %1$s um %2$s</string>
     <string name="reminder_text">In %1$d Min.: %2$s ab %3$s</string>
+    <!-- Offline-Kopie, Routenoptionen, Kalender, Widget, Einstellungen -->
+    <string name="offline_banner">Offline · Stand %1$s</string>
+    <string name="d_ticket">Deutschlandticket</string>
+    <string name="more_options">Mehr Optionen</string>
+    <string name="more_options_n">Mehr Optionen (%d)</string>
+    <string name="reset">Zurücksetzen</string>
+    <string name="via_stop">Über Halt</string>
+    <string name="via_none">Halt wählen</string>
+    <string name="remove_via">Zwischenhalt entfernen</string>
+    <string name="change_time">Mehr Zeit zum Umsteigen (Min.)</string>
+    <string name="change_time_normal">Normal</string>
+    <string name="walk_pace">Gehtempo</string>
+    <string name="walk_slow">Langsam</string>
+    <string name="walk_normal">Normal</string>
+    <string name="walk_fast">Schnell</string>
+    <string name="walk_pace_step_free">Stufenfreie Routen nutzen ihr eigenes Tempo.</string>
+    <string name="add_to_calendar">In Kalender eintragen</string>
+    <string name="no_calendar_app">Keine Kalender-App gefunden</string>
+    <string name="widget_label">Navi Abfahrten</string>
+    <string name="widget_description">Nächste Abfahrten an deinem Lieblingshalt</string>
+    <string name="widget_empty">Markier in Navi einen Halt mit Stern, dann siehst du hier seine Abfahrten.</string>
+    <string name="widget_no_departures">Gerade keine Abfahrten.</string>
+    <string name="widget_next_stop">Nächster Lieblingshalt</string>
+    <string name="widget_offline">offline</string>
+    <string name="refresh">Aktualisieren</string>
+    <string name="percent">%d %%</string>
+    <plurals name="a11y_in_minutes"><item quantity="one">in %d Minute</item><item quantity="other">in %d Minuten</item></plurals>
+    <string name="assistant_setting">„Frag Navi“ zeigen</string>
+    <string name="assistant_setting_hint">Der Assistent-Knopf im Reise-Tab</string>
 </resources>

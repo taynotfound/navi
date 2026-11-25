@@ -52,6 +52,13 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
         <receiver android:name=".ReminderReceiver" android:exported="false" />
+        <!-- home-screen widget: next departures at a favourite stop -->
+        <receiver android:name=".DeparturesWidget" android:exported="false" android:label="@string/widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_departures" />
+        </receiver>
         <!-- stores the in-app language choice on Android < 13 -->
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"

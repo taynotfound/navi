@@ -2,4 +2,10 @@
     <!-- dark is the default look -->
     <color name="background">#FF0C0E12</color>
     <color name="ic_background">#FF161A1F</color>
+    <!-- home-screen widget, light; the dark set is in values-night -->
+    <color name="widget_surface">#F2F9F9FE</color>
+    <color name="widget_chip">#FFECEEF5</color>
+    <color name="widget_on_surface">#FF2E333A</color>
+    <color name="widget_on_surface_variant">#FF5A606B</color>
+    <color name="widget_late">#FFB3261E</color>
 </resources>

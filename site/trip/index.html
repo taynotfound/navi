@@ -306,7 +306,12 @@ document.getElementById("lang").addEventListener("click", () => {
 
 document.getElementById("title").textContent = T().loading;
 render();
-load().then(keep => { if (keep) setInterval(() => { if (!document.hidden) load(); }, 30000); });
+load().then(keep => {
+  if (!keep) return;
+  setInterval(() => { if (!document.hidden) load(); }, 30000);
+  // back on the tab after a while: show where they are now, not 30 s from now
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+});
 setInterval(() => { if (data && !document.hidden) render(); }, 15000);
 </script>
 </body>
