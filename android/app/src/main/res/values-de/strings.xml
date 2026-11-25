@@ -341,7 +341,7 @@
     <string name="set_home">Wo ist dein Zuhause?</string>
     <string name="set_work">Wo ist deine Arbeit?</string>
     <string name="change_place">%s ändern</string>
-    <string name="tap_to_set">Tippen zum Festlegen</string>
+    <string name="tap_to_set">Antippen</string>
     <string name="undo">Rückgängig</string>
     <string name="trip_removed">Fahrt entfernt</string>
     <string name="favorite_removed">%s entfernt</string>

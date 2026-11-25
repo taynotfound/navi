@@ -59,7 +59,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    testOptions { unitTests.isIncludeAndroidResources = true }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+        // website screenshots (SiteScreenshots) only render with -PsiteShots
+        unitTests.all { it.systemProperty("siteShots", providers.gradleProperty("siteShots").isPresent.toString()) }
+    }
 
     buildFeatures {
         compose = true

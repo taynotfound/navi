@@ -39,6 +39,19 @@
   .hits li.none { cursor: default; font-weight: 400; color: var(--glass-dim); }
   .dep .t small.in { color: #afbccf; }
 
+  .shots { margin-top: 96px; }
+  .shots h2 { margin: 0 0 28px; font-size: clamp(30px, 4vw, 44px); line-height: 1.08; font-weight: 700; letter-spacing: -.02em; }
+  .shots-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
+  .shots figure { margin: 0; }
+  .shots img { display: block; width: 100%; height: auto; border-radius: 28px; border: 1px solid var(--glass-edge); background: var(--glass); box-shadow: 0 24px 60px -28px rgb(0 0 0 / .7); }
+  .shots figcaption { margin-top: 14px; color: var(--ink-2); font-size: 16px; max-width: 32ch; }
+  @media (max-width: 760px) {
+    .shots { margin-top: 72px; }
+    /* one phone at a time, swipe for the next */
+    .shots-row { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 78%; overflow-x: auto; scroll-snap-type: x mandatory;
+      margin: 0 -16px; padding: 0 16px 8px; scroll-padding: 0 16px; }
+    .shots figure { scroll-snap-align: start; }
+  }
   .letter { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 56px; margin-top: 96px; }
   .letter h2 { margin: 0; font-size: clamp(30px, 4vw, 44px); line-height: 1.08; font-weight: 700; letter-spacing: -.02em; }
   .letter .intro p { max-width: 40ch; color: var(--ink-2); }
@@ -107,6 +120,27 @@
       <p class="display-foot" id="note"></p>
     </section>
 
+    <section class="shots" aria-labelledby="shots-h">
+      <h2 id="shots-h" data-i="shotsH">So sieht die App aus</h2>
+      <div class="shots-row">
+        <figure>
+          <img data-shot="journey" src="shots/journey-de.webp" width="411" height="891" loading="lazy" decoding="async"
+            alt="Startseite: oben die laufende Fahrt mit „Umsteigen in Göttingen“ und einem Knopf für die Fußweg-Navigation, darunter Von und Nach, Zuhause und Arbeit." data-i-alt="shotJourneyAlt">
+          <figcaption data-i="shotJourney">Was gerade dran ist, steht ganz oben. Nach Hause mit einem Tipp.</figcaption>
+        </figure>
+        <figure>
+          <img data-shot="trip" src="shots/trip-de.webp" width="411" height="891" loading="lazy" decoding="async"
+            alt="Eine Fahrt: „Im 62 Richtung Rosdorf, aussteigen in Göttingen Bahnhof/ZOB“, darunter die Strecke auf der Karte und die Zeiten mit „pünktlich“." data-i-alt="shotTripAlt">
+          <figcaption data-i="shotTrip">Unterwegs ein Satz: was jetzt zu tun ist. Live, auch in der Benachrichtigung.</figcaption>
+        </figure>
+        <figure>
+          <img data-shot="walk" src="shots/walk-de.webp" width="411" height="891" loading="lazy" decoding="async"
+            alt="Fußweg-Navigation: oben die nächste Abbiegung mit Entfernung, die Karte in Laufrichtung, unten die restliche Zeit und wie viel Puffer bis zum Zug bleibt." data-i-alt="shotWalkAlt">
+          <figcaption data-i="shotWalk">Zum Gleis mit Navigation wie in einer Karten-App. Und du siehst, ob der Anschluss klappt.</figcaption>
+        </figure>
+      </div>
+    </section>
+
     <section class="letter" aria-labelledby="hi">
       <div class="intro" id="intro">
         <h2 id="hi">Moin, ich bin tay.</h2>
@@ -164,12 +198,20 @@ const EN = {
   onTime: "on time", cancelled: "cancelled", empty: "Nothing leaves here in the next 90 minutes. Time for a coffee.",
   offline: "Can't reach the live data right now. Probably back in a minute.", updated: "Live, as of", via: "via",
   light: "Light design", dark: "Dark design",
+  shotsH: "What the app looks like",
+  shotJourney: "Whatever is happening now is at the top. Home is one tap away.",
+  shotTrip: "On the way, one sentence: what to do now. Live, in the notification too.",
+  shotWalk: "To the platform with navigation like a maps app. And you see whether the connection works.",
+  shotJourneyAlt: "Start screen: at the top the trip in progress, “Change at Göttingen”, with a button for walking navigation; below From and To, Home and Work.",
+  shotTripAlt: "A trip: “On the 62 to Rosdorf, get off at Göttingen Bahnhof/ZOB”, below the route on a map and the times marked “on time”.",
+  shotWalkAlt: "Walking navigation: the next turn and its distance at the top, the map facing the way you walk, at the bottom the time left and how much spare time there is before the train.",
   findLabel: "Search for another stop", findPh: "Your stop …", noHits: "No stop found.", inMin: m => m <= 0 ? "now" : `in ${m} min`
 };
 const DE = {};
 document.querySelectorAll("[data-i]").forEach(e => DE[e.dataset.i] = e.innerHTML);
 document.querySelectorAll("[data-i-aria]").forEach(e => DE[e.dataset.iAria] = e.getAttribute("aria-label"));
 document.querySelectorAll("[data-i-ph]").forEach(e => DE[e.dataset.iPh] = e.placeholder);
+document.querySelectorAll("[data-i-alt]").forEach(e => DE[e.dataset.iAlt] = e.alt);
 Object.assign(DE, { onTime: "pünktlich", cancelled: "fällt aus", empty: "In den nächsten 90 Minuten fährt hier nichts. Zeit für einen Kaffee.",
   offline: "Die Live-Daten sind gerade nicht erreichbar. Gleich nochmal probieren.", updated: "Live, Stand", via: "über",
   light: "Helles Design", dark: "Dunkles Design", noHits: "Keine Haltestelle gefunden.", inMin: m => m <= 0 ? "jetzt" : `in ${m} Min.` });
@@ -184,6 +226,9 @@ function applyLang() {
   document.querySelectorAll("[data-i]").forEach(e => { e.innerHTML = T(e.dataset.i); });
   document.querySelectorAll("[data-i-aria]").forEach(e => e.setAttribute("aria-label", T(e.dataset.iAria)));
   document.querySelectorAll("[data-i-ph]").forEach(e => { e.placeholder = T(e.dataset.iPh); });
+  document.querySelectorAll("[data-i-alt]").forEach(e => { e.alt = T(e.dataset.iAlt); });
+  // screenshots of the app in the same language
+  document.querySelectorAll("[data-shot]").forEach(e => { e.src = `shots/${e.dataset.shot}-${lang}.webp`; });
   letter.innerHTML = lang === "en" ? letterEN : letterDE;
   const b = document.getElementById("lang");
   b.textContent = lang === "en" ? "DE" : "EN";

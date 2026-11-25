@@ -123,6 +123,9 @@ private class MapHolder {
     }
 }
 
+/** Previews and screenshot tests can't run MapLibre; they can hand in a picture of the map instead. */
+val LocalMapSnapshot = androidx.compose.runtime.staticCompositionLocalOf<androidx.compose.ui.graphics.ImageBitmap?> { null }
+
 @SuppressLint("MissingPermission")
 @Composable
 fun NaviMap(
@@ -136,7 +139,11 @@ fun NaviMap(
 ) {
     // previews and tests can't load MapLibre's native code
     if (androidx.compose.ui.platform.LocalInspectionMode.current) {
-        androidx.compose.foundation.layout.Box(modifier.background(androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainerHigh))
+        val snapshot = LocalMapSnapshot.current
+        if (snapshot != null) androidx.compose.foundation.Image(
+            snapshot, null, modifier, contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+        )
+        else androidx.compose.foundation.layout.Box(modifier.background(androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainerHigh))
         return
     }
     val ctx = LocalContext.current
