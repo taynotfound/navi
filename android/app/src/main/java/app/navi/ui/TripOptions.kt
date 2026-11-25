@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -20,12 +23,13 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ConfirmationNumber
-import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Switch
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -55,6 +59,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import app.navi.JourneyForm
 import app.navi.R
+import app.navi.Store
 import app.navi.hhmm
 import java.time.Duration
 import java.time.Instant
@@ -67,13 +72,15 @@ val modeFilters = listOf(
     ModeGroup.SUBWAY to "subway", ModeGroup.TRAM to "tram", ModeGroup.BUS to "bus", ModeGroup.FERRY to "ferry",
 )
 
-/** Time, types, step-free and bike: the same chips on the search form and above the results. */
+/**
+ * The search options, kept quiet: the time, then only the options that are switched on (tap one to switch it
+ * off), then one "Options" chip with everything else. Same row on the search form and above the results.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TripOptionChips(modifier: Modifier = Modifier) {
     var timeDialog by remember { mutableStateOf(false) }
-    var modesDialog by remember { mutableStateOf(false) }
-    var moreDialog by remember { mutableStateOf(false) }
+    var optionsDialog by remember { mutableStateOf(false) }
     FlowRow(modifier, horizontalArrangement = ItemSpacing) {
         FilterChip(
             selected = JourneyForm.time != null,
@@ -81,63 +88,88 @@ fun TripOptionChips(modifier: Modifier = Modifier) {
             label = { Text(timeLabel()) },
             leadingIcon = { Icon(Icons.Filled.Schedule, null, Modifier.size(18.dp)) },
         )
-        FilterChip(
-            selected = JourneyForm.modes.isNotEmpty(),
-            onClick = { modesDialog = true },
-            label = { Text(modesLabel()) },
-            leadingIcon = { Icon(Icons.Filled.Tune, null, Modifier.size(18.dp)) },
-        )
-        FilterChip(
-            selected = JourneyForm.wheelchair,
-            onClick = { JourneyForm.wheelchair = !JourneyForm.wheelchair },
-            label = { Text(stringResource(R.string.step_free)) },
-            leadingIcon = { Icon(Icons.AutoMirrored.Filled.Accessible, null, Modifier.size(18.dp)) },
-        )
-        FilterChip(
-            selected = JourneyForm.bike,
-            onClick = { JourneyForm.bike = !JourneyForm.bike },
-            label = { Text(stringResource(R.string.with_bike)) },
-            leadingIcon = { Icon(Icons.AutoMirrored.Filled.DirectionsBike, null, Modifier.size(18.dp)) },
-        )
         val dTicket = JourneyForm.modes == JourneyForm.dTicketModes
-        FilterChip(
-            selected = dTicket,
-            onClick = { JourneyForm.modes = if (dTicket) emptySet() else JourneyForm.dTicketModes },
-            label = { Text(stringResource(R.string.d_ticket)) },
-            leadingIcon = { Icon(Icons.Filled.ConfirmationNumber, null, Modifier.size(18.dp)) },
-        )
-        FilterChip(
-            selected = moreCount() > 0,
-            onClick = { moreDialog = true },
-            label = { Text(if (moreCount() > 0) stringResource(R.string.more_options_n, moreCount()) else stringResource(R.string.more_options)) },
-            leadingIcon = { Icon(Icons.Filled.MoreHoriz, null, Modifier.size(18.dp)) },
+        if (dTicket) ActiveChip(stringResource(R.string.d_ticket), Icons.Filled.ConfirmationNumber) { JourneyForm.modes = emptySet() }
+        else if (JourneyForm.modes.isNotEmpty()) ActiveChip(modesLabel(), Icons.Filled.Tune) { JourneyForm.modes = emptySet() }
+        if (JourneyForm.wheelchair) ActiveChip(stringResource(R.string.step_free), Icons.AutoMirrored.Filled.Accessible) { JourneyForm.wheelchair = false }
+        if (JourneyForm.bike) ActiveChip(stringResource(R.string.with_bike), Icons.AutoMirrored.Filled.DirectionsBike) { JourneyForm.bike = false }
+        JourneyForm.via?.let { v -> ActiveChip(stringResource(R.string.via, v.name), Icons.Filled.Place) { JourneyForm.via = null } }
+        if (JourneyForm.minTransfer > 0 || JourneyForm.walkSpeed != "normal") {
+            ActiveChip(stringResource(R.string.options_custom_pace), Icons.Filled.AccessTime) { JourneyForm.minTransfer = 0; JourneyForm.walkSpeed = "normal" }
+        }
+        AssistChip(
+            onClick = { optionsDialog = true },
+            label = { Text(stringResource(R.string.options)) },
+            leadingIcon = { Icon(Icons.Filled.Tune, null, Modifier.size(18.dp)) },
         )
     }
     if (timeDialog) TimeDialog { timeDialog = false }
-    if (modesDialog) ModesDialog { modesDialog = false }
-    if (moreDialog) MoreOptionsDialog { moreDialog = false }
+    if (optionsDialog) OptionsDialog { optionsDialog = false }
 }
 
-private fun moreCount() = listOf(JourneyForm.via != null, JourneyForm.minTransfer > 0, JourneyForm.walkSpeed != "normal").count { it }
+/** A switched-on option; tapping it switches it off. */
+@Composable
+private fun ActiveChip(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onOff: () -> Unit) {
+    FilterChip(
+        selected = true,
+        onClick = onOff,
+        label = { Text(label, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
+        leadingIcon = { Icon(icon, null, Modifier.size(18.dp)) },
+        trailingIcon = { Icon(Icons.Filled.Close, stringResource(R.string.remove), Modifier.size(18.dp)) },
+        modifier = Modifier.widthIn(max = 220.dp),
+    )
+}
 
 private val transferChoices = listOf(0, 5, 10, 15)
 private val walkChoices = listOf("slow", "normal", "fast")
 
-/** Via stop, extra time per change, walking pace. Applied straight away, like the other chips. */
+/** Every search option in one place. Changes apply straight away. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun MoreOptionsDialog(onClose: () -> Unit) {
+private fun OptionsDialog(onClose: () -> Unit) {
     var pickVia by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onClose,
         confirmButton = { TextButton(onClick = onClose) { Text(stringResource(R.string.done)) } },
         dismissButton = {
-            TextButton(onClick = { JourneyForm.via = null; JourneyForm.minTransfer = 0; JourneyForm.walkSpeed = "normal" }) {
+            TextButton(onClick = {
+                JourneyForm.via = null; JourneyForm.minTransfer = 0; JourneyForm.walkSpeed = "normal"
+                JourneyForm.modes = emptySet(); JourneyForm.wheelchair = Store.wheelchairDefault; JourneyForm.bike = false
+            }) {
                 Text(stringResource(R.string.reset))
             }
         },
-        title = { Text(stringResource(R.string.more_options)) },
+        title = { Text(stringResource(R.string.options)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.types_title), style = MaterialTheme.typography.titleSmall)
+                // nothing ticked means all types; the last type can't be unticked
+                val all = modeFilters.map { it.second }.toSet()
+                val sel = JourneyForm.modes.ifEmpty { all }
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    modeFilters.forEach { (g, key) ->
+                        FilterChip(
+                            selected = key in sel,
+                            onClick = {
+                                val next = if (key in sel) sel - key else sel + key
+                                if (next.isNotEmpty()) JourneyForm.modes = if (next == all) emptySet() else next
+                            },
+                            label = { Text(stringResource(g.label)) },
+                            leadingIcon = { Icon(g.icon, null, Modifier.size(18.dp)) },
+                        )
+                    }
+                    val dTicket = JourneyForm.modes == JourneyForm.dTicketModes
+                    FilterChip(
+                        selected = dTicket,
+                        onClick = { JourneyForm.modes = if (dTicket) emptySet() else JourneyForm.dTicketModes },
+                        label = { Text(stringResource(R.string.d_ticket_only)) },
+                        leadingIcon = { Icon(Icons.Filled.ConfirmationNumber, null, Modifier.size(18.dp)) },
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+                OptionSwitch(stringResource(R.string.step_free), Icons.AutoMirrored.Filled.Accessible, JourneyForm.wheelchair) { JourneyForm.wheelchair = it }
+                OptionSwitch(stringResource(R.string.with_bike), Icons.AutoMirrored.Filled.DirectionsBike, JourneyForm.bike) { JourneyForm.bike = it }
+                Spacer(Modifier.height(8.dp))
                 Text(stringResource(R.string.via_stop), style = MaterialTheme.typography.titleSmall)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     FilterChip(
@@ -179,6 +211,19 @@ private fun MoreOptionsDialog(onClose: () -> Unit) {
 }
 
 @Composable
+private fun OptionSwitch(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, on: Boolean, set: (Boolean) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().toggleable(on, role = androidx.compose.ui.semantics.Role.Switch, onValueChange = set).padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.width(12.dp))
+        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+        Switch(checked = on, onCheckedChange = null)
+    }
+}
+
+@Composable
 fun timeLabel(): String {
     val t = JourneyForm.time ?: return stringResource(R.string.leave_now)
     val days = Duration.between(ZonedDateTime.now().toLocalDate().atStartOfDay(), t.toLocalDate().atStartOfDay()).toDays()
@@ -195,35 +240,6 @@ private fun modesLabel(): String {
     if (m.isEmpty()) return stringResource(R.string.all_types)
     val names = modeFilters.filter { it.second in m }.map { stringResource(it.first.label) }
     return if (names.size <= 2) names.joinToString(", ") else stringResource(R.string.n_types, names.size)
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun ModesDialog(onClose: () -> Unit) {
-    var sel by remember { mutableStateOf(JourneyForm.modes.ifEmpty { modeFilters.map { it.second }.toSet() }) }
-    AlertDialog(
-        onDismissRequest = onClose,
-        confirmButton = {
-            TextButton(enabled = sel.isNotEmpty(), onClick = {
-                JourneyForm.modes = if (sel.size == modeFilters.size) emptySet() else sel
-                onClose()
-            }) { Text(stringResource(R.string.apply)) }
-        },
-        dismissButton = { TextButton(onClick = { sel = modeFilters.map { it.second }.toSet() }) { Text(stringResource(R.string.all_types)) } },
-        title = { Text(stringResource(R.string.types_title)) },
-        text = {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                modeFilters.forEach { (g, key) ->
-                    FilterChip(
-                        selected = key in sel,
-                        onClick = { sel = if (key in sel) sel - key else sel + key },
-                        label = { Text(stringResource(g.label)) },
-                        leadingIcon = { Icon(g.icon, null, Modifier.size(18.dp)) },
-                    )
-                }
-            }
-        },
-    )
 }
 
 /** Departure or arrival, any day, any time. Typing is the default; the clock face is one tap away. */

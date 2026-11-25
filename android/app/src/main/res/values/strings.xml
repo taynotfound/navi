@@ -78,8 +78,6 @@
     <string name="step_free">Step-free</string>
     <string name="with_bike">With bike</string>
     <string name="search_connections">Find connections</string>
-    <string name="hint_choose_start">Where are you starting?</string>
-    <string name="hint_choose_destination">And where to?</string>
     <string name="hint_same_places">Start and destination are the same. You\'re already there.</string>
     <string name="from_where">From where?</string>
     <string name="to_where">Where to?</string>
@@ -116,6 +114,7 @@
     <string name="planned_with_navi">Planned with Navi</string>
     <!-- live status -->
     <string name="live_updated">Live, as of %s</string>
+    <string name="chip_min">%d min</string>
     <string name="status_departs_in">Leaves in %d min</string>
     <string name="status_departs_at">Leaves at %s</string>
     <string name="status_board">Take the %1$s at %2$s</string>
@@ -322,8 +321,10 @@
     <!-- offline copy, route options, calendar, widget, settings -->
     <string name="offline_banner">Offline · showing data from %1$s</string>
     <string name="d_ticket">Deutschlandticket</string>
-    <string name="more_options">More options</string>
-    <string name="more_options_n">More options (%d)</string>
+    <string name="options">Options</string>
+    <string name="remove">Remove</string>
+    <string name="options_custom_pace">Own pace</string>
+    <string name="d_ticket_only">Deutschlandticket only</string>
     <string name="reset">Reset</string>
     <string name="via_stop">Via stop</string>
     <string name="via_none">Choose a stop</string>

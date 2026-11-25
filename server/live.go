@@ -100,9 +100,14 @@ func readItinerary(r *http.Request) (Itinerary, error) {
 	if len(it.Legs) == 0 || len(it.Legs) > 40 {
 		return it, badRequest("invalid itinerary")
 	}
-	for _, l := range it.Legs {
+	for i, l := range it.Legs {
 		if len(l.Stops) > 500 || len(l.TripID) > 300 {
 			return it, badRequest("invalid itinerary")
+		}
+		// The app leaves out fields at their default, so a line sent back to us has no precision.
+		// 6 is what we hand out; 0 would turn every coordinate into nonsense on the way back.
+		if g := l.Geometry; g != nil && g.Precision == 0 {
+			it.Legs[i].Geometry.Precision = 6
 		}
 	}
 	return it, nil

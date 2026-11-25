@@ -52,6 +52,8 @@ private const val STYLE_DARK = "https://tiles.openfreemap.org/styles/dark"
 
 private fun Color.hex() = String.format("#%06X", 0xFFFFFF and toArgb())
 
+private fun valid(p: Pair<Double, Double>) = p.first in -90.0..90.0 && p.second in -180.0..180.0
+
 private class MapHolder {
     var map: MapLibreMap? = null
     var style: Style? = null
@@ -63,7 +65,7 @@ private class MapHolder {
     fun applyData() {
         val style = style ?: return
         style.getSourceAs<GeoJsonSource>("navi-lines")?.setGeoJson(
-            FeatureCollection.fromFeatures(lines.filter { it.points.size >= 2 }.map { l ->
+            FeatureCollection.fromFeatures(lines.map { it.copy(points = it.points.filter(::valid)) }.filter { it.points.size >= 2 }.map { l ->
                 Feature.fromGeometry(LineString.fromLngLats(l.points.map { Point.fromLngLat(it.second, it.first) })).apply {
                     addStringProperty("color", l.color.hex())
                     addBooleanProperty("dashed", l.dashed)
@@ -71,7 +73,7 @@ private class MapHolder {
             }),
         )
         style.getSourceAs<GeoJsonSource>("navi-points")?.setGeoJson(
-            FeatureCollection.fromFeatures(points.map { p ->
+            FeatureCollection.fromFeatures(points.filter { valid(it.lat to it.lon) }.map { p ->
                 Feature.fromGeometry(Point.fromLngLat(p.lon, p.lat)).apply {
                     addStringProperty("id", p.id)
                     addStringProperty("color", p.color.hex())
@@ -84,7 +86,9 @@ private class MapHolder {
 
     fun applyCamera(animate: Boolean) {
         val map = map ?: return
-        val cam = camera?.takeIf { it.points.isNotEmpty() } ?: return
+        // one bad coordinate must not take the app down (LatLng throws outside ±90/±180)
+        val pts = camera?.points?.filter(::valid)?.takeIf { it.isNotEmpty() } ?: return
+        val cam = camera!!.copy(points = pts)
         val update = if (cam.points.size == 1 || cam.points.distinct().size == 1) {
             CameraUpdateFactory.newLatLngZoom(LatLng(cam.points[0].first, cam.points[0].second), cam.zoom)
         } else {

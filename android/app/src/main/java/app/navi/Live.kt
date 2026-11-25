@@ -84,6 +84,12 @@ private fun delay(l: Leg, departure: Boolean): Int? =
     if (departure) app.navi.ui.delayOf(l.from.departure, l.from.scheduledDeparture, l.realtime)
     else app.navi.ui.delayOf(l.to.arrival, l.to.scheduledArrival, l.realtime)
 
+/**
+ * The status-bar chip of the Live Update: only a few characters fit, so it says one thing, how long until the
+ * next thing happens ("14 min"), or the clock time when that's more than an hour away. The line goes in the title.
+ */
+private fun chipIn(at: ZonedDateTime, m: Long) = if (m < 60) L.s(R.string.chip_min, m) else hhmm(at)
+
 fun tripStatus(it: Itinerary, now: ZonedDateTime): TripStatus {
     val transit = it.legs.filterNot { l -> l.isWalk }
     val last = it.legs.last().to.name
@@ -97,7 +103,7 @@ fun tripStatus(it: Itinerary, now: ZonedDateTime): TripStatus {
         return TripStatus(
             if (m <= 120) L.s(R.string.status_departs_in, m) else L.s(R.string.status_departs_at, hhmm(dep(f)!!)),
             f.from.platform?.let { p -> L.s(R.string.status_board_platform, f.line.orEmpty(), f.from.name, p) } ?: L.s(R.string.status_board, f.line.orEmpty(), f.from.name),
-            "${f.line.orEmpty()} ${m}′".trim(), false,
+            chipIn(dep(f)!!, m), false,
         )
     }
     for ((i, l) in transit.withIndex()) {
@@ -106,14 +112,14 @@ fun tripStatus(it: Itinerary, now: ZonedDateTime): TripStatus {
             return TripStatus(
                 L.s(R.string.status_riding, l.line.orEmpty(), l.headsign ?: l.to.name),
                 L.s(R.string.status_get_off, l.to.name, hhmm(arr(l)!!), mins(now, arr(l))),
-                "${mins(now, arr(l))}′", false,
+                chipIn(arr(l)!!, mins(now, arr(l))), false,
             )
         }
         if (next != null && !now.isBefore(arr(l) ?: now) && now.isBefore(dep(next) ?: now)) {
             return TripStatus(
                 L.s(R.string.status_change, next.from.name, mins(now, dep(next))),
                 listOfNotNull(next.line, next.from.platform?.let { p -> L.s(R.string.platform_n, p) }).joinToString(" · "),
-                "${next.line.orEmpty()} ${mins(now, dep(next))}′".trim(), false,
+                chipIn(dep(next)!!, mins(now, dep(next))), false,
             )
         }
     }

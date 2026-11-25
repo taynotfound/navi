@@ -155,12 +155,21 @@ fun JourneyTab(nav: Nav) {
     }
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
-        Text(
-            stringResource(R.string.where_to),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 16.dp),
-        )
+        Row(
+            Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 16.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                stringResource(R.string.where_to),
+                Modifier.weight(1f),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            // "Frag Navi": ask in your own words instead of filling the form (can be hidden in Settings)
+            if (Store.assistantEnabled) IconButton(onClick = nav::assistant) {
+                Icon(Icons.AutoMirrored.Filled.Chat, stringResource(R.string.ask_entry))
+            }
+        }
         ElevatedCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp), shape = RoundedCornerShape(28.dp)) {
             Box {
                 Column(Modifier.padding(vertical = 8.dp)) {
@@ -191,33 +200,19 @@ fun JourneyTab(nav: Nav) {
             Spacer(Modifier.width(8.dp))
             Text(stringResource(R.string.search_connections), style = MaterialTheme.typography.titleMedium)
         }
-        if (!ready) {
+        // the placeholders already say what's missing; only explain the one case they can't
+        if (JourneyForm.from != null && JourneyForm.from?.id == JourneyForm.to?.id) {
             Text(
-                stringResource(when {
-                    JourneyForm.from == null -> R.string.hint_choose_start
-                    JourneyForm.to == null -> R.string.hint_choose_destination
-                    else -> R.string.hint_same_places
-                }),
+                stringResource(R.string.hint_same_places),
                 Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
-        // "Frag Navi": ask in your own words instead of filling the form (can be hidden in Settings)
-        if (Store.assistantEnabled) androidx.compose.material3.OutlinedButton(
-            onClick = nav::assistant,
-            shapes = ButtonDefaults.shapes(),
-            modifier = Modifier.padding(start = 16.dp, top = 12.dp).height(48.dp),
-        ) {
-            Icon(Icons.AutoMirrored.Filled.Chat, null, Modifier.size(18.dp))
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.ask_entry))
-        }
-
         if (Store.recentJourneys.isNotEmpty()) {
             SectionHeader(stringResource(R.string.recent))
-            Store.recentJourneys.forEach { j ->
+            Store.recentJourneys.take(3).forEach { j ->
                 // each recent trip drawn as a tiny route: start dot, line, destination ring
                 Row(
                     Modifier.fillMaxWidth().clickable {

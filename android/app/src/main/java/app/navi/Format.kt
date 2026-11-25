@@ -37,7 +37,8 @@ fun formatDistance(m: Double?): String? = when {
 
 /** Decodes a Google encoded polyline with the given precision into (lat, lon) pairs. */
 fun decodePolyline(encoded: String, precision: Int = 6): List<Pair<Double, Double>> {
-    val factor = Math.pow(10.0, precision.toDouble())
+    // 0 came back from older servers for lines the app had sent them; it was always 6
+    val factor = Math.pow(10.0, (if (precision in 1..9) precision else 6).toDouble())
     val out = ArrayList<Pair<Double, Double>>()
     var i = 0
     var lat = 0L
