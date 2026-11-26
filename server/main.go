@@ -70,6 +70,10 @@ func timeParam(q url.Values) (time.Time, error) {
 	}
 	t, err := time.Parse(time.RFC3339, v)
 	if err != nil {
+		// Older app builds send Java's ISO form, which leaves out ":00" seconds.
+		t, err = time.Parse("2006-01-02T15:04Z07:00", v)
+	}
+	if err != nil {
 		return t, badRequest("invalid time, expected RFC 3339")
 	}
 	return t, nil

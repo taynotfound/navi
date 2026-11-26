@@ -11,6 +11,11 @@ private val HHMM = DateTimeFormatter.ofPattern("HH:mm")
 fun parseTime(s: String?): ZonedDateTime? =
     s?.let { runCatching { OffsetDateTime.parse(it).atZoneSameInstant(ZoneId.systemDefault()) }.getOrNull() }
 
+private val API_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX")
+
+/** Full RFC 3339 for the server. ZonedDateTime.toString() drops ":00" seconds and adds "[Zone]", which the server rejects. */
+fun apiTime(t: ZonedDateTime): String = t.format(API_TIME)
+
 fun hhmm(s: String?): String = parseTime(s)?.format(HHMM) ?: "–"
 
 fun hhmm(t: ZonedDateTime): String = t.format(HHMM)

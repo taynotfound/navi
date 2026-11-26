@@ -3,6 +3,7 @@ package app.navi.ui
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Navigation
 import app.navi.currentWalk
+import app.navi.apiTime
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.ui.text.withStyle
@@ -303,7 +304,7 @@ fun ResultsScreen(nav: Nav) {
         scope.launch {
             try {
                 val p = Api.plan(
-                    from.id, to.id, JourneyForm.time?.toOffsetDateTime()?.toString(), JourneyForm.arriveBy,
+                    from.id, to.id, JourneyForm.time?.let(::apiTime), JourneyForm.arriveBy,
                     JourneyForm.wheelchair, JourneyForm.bike, cursor, JourneyForm.modes,
                     JourneyForm.via?.id, JourneyForm.minTransfer, JourneyForm.walkSpeed,
                 )
@@ -659,7 +660,7 @@ private fun Failover(it: Itinerary, nav: Nav) {
     var alts by remember(br.from.id, br.keep) { mutableStateOf<List<Itinerary>?>(null) }
     var failed by remember(br.from.id, br.keep) { mutableStateOf(false) }
     LaunchedEffect(br.from.id, br.keep) {
-        runCatching { Api.plan(br.from.id, dest, br.time.toOffsetDateTime().toString(), false, JourneyForm.wheelchair, JourneyForm.bike, modes = JourneyForm.modes,
+        runCatching { Api.plan(br.from.id, dest, apiTime(br.time), false, JourneyForm.wheelchair, JourneyForm.bike, modes = JourneyForm.modes,
             minTransfer = JourneyForm.minTransfer, walkSpeed = JourneyForm.walkSpeed) }
             .onSuccess { p -> alts = p.itineraries.filter { a -> a.legs.any { l -> !l.isWalk } }.take(3) }
             .onFailure { failed = true }
